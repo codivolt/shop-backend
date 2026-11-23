@@ -1,0 +1,14 @@
+{
+  "presets": [
+    ["@babel/preset-env", { "targets": { "node": "current" } }],
+    ["@babel/preset-typescript", { "allowDeclarations": true }]
+  ],
+  "overrides": [
+    {
+      "test": ["node_modules/.pnpm/**/*@nestjs*/**/*.js", "node_modules/.pnpm/**/*rxjs*/**/*.js", "node_modules/.pnpm/**/*uuid*/**/*.js", "node_modules/.pnpm/**/*class-transformer*/**/*.js", "node_modules/.pnpm/**/*class-validator*/**/*.js", "node_modules/.pnpm/**/*reflect-metadata*/**/*.js", "node_modules/.pnpm/**/*typeorm*/**/*.js"],
+      "presets": [
+        ["@babel/preset-env", { "targets": { "node": "current" } }]
+      ]
+    }
+  ]
+}
