@@ -261,32 +261,42 @@ export class SeedService implements OnModuleInit {
       'SEED_ADMIN_PASSWORD',
       'Admin@123',
     );
+    const adminPhone = this.configService.get<string>(
+      'SEED_ADMIN_PHONE',
+      adminEmail,
+    );
 
     for (const u of DEFAULT_USERS) {
       const email = u.role === UserRole.SUPER_ADMIN ? adminEmail : u.email;
       const password =
         u.role === UserRole.SUPER_ADMIN ? adminPassword : u.password;
+      const phone = u.role === UserRole.SUPER_ADMIN ? adminPhone : u.phone;
 
       const existing = await manager.findOne(User, {
         where: { email },
       });
-      if (existing) {
-        continue;
-      }
 
-      const user = manager.create(User, {
+      const data = {
         email,
         password,
         role: u.role,
         firstName: u.firstName,
         lastName: u.lastName,
-        phone: u.phone,
+        phone,
         isActive: u.isActive,
         passwordSetAt: new Date(),
-      });
+      };
 
+      if (existing) {
+        manager.merge(User, existing, data);
+        await manager.save(User, existing);
+        this.logger.log(`کاربر ${email} با نقش ${u.role} به‌روزرسانی شد`);
+        continue;
+      }
+
+      const user = manager.create(User, data);
       await manager.save(User, user);
-      this.logger.log(`کاربر ${u.email} با نقش ${u.role} ایجاد شد`);
+      this.logger.log(`کاربر ${email} با نقش ${u.role} ایجاد شد`);
     }
   }
 
