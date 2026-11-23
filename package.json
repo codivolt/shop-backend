@@ -20,7 +20,8 @@
     "test:integration": "npx jest -c jest.config.js --selectProjects integration",
     "test:e2e": "npx jest -c jest.config.js --selectProjects e2e",
     "test:all": "npx jest -c jest.config.js",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "seed": "ts-node -r tsconfig-paths/register src/seed/seed.main.ts"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^12.0.5",
