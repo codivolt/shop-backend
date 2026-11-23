@@ -21,8 +21,6 @@ import { slugify } from '../../common/utils/slug.util';
 
 @Entity('products')
 @Index(['name'])
-@Index(['slug'])
-@Index(['sku'])
 @Index(['isActive'])
 @Index(['categoryId'])
 @Index(['brandId'])

@@ -18,7 +18,6 @@ import { slugify } from '../../common/utils/slug.util';
 
 @Entity('categories')
 @Index(['name'])
-@Index(['slug'])
 @Index(['isActive'])
 @Index(['parentId'])
 export class Category {

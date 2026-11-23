@@ -15,7 +15,6 @@ import { slugify } from '../../common/utils/slug.util';
 
 @Entity('brands')
 @Index(['name'])
-@Index(['slug'])
 @Index(['isActive'])
 export class Brand {
   @ApiProperty({
