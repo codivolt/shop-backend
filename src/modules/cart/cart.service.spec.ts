@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CartService } from './cart.service';
@@ -8,7 +12,11 @@ import { Product } from '../products/product.entity';
 import { User } from '../users/users.entity';
 import { AddToCartDto, UpdateCartDto } from './dto/cart.dto';
 import { createMockRepository } from '../../../test/utils/mock-helpers';
-import { createTestCartItem, createTestUser, createTestProduct } from '../../../test/utils/test-factories';
+import {
+  createTestCartItem,
+  createTestUser,
+  createTestProduct,
+} from '../../../test/utils/test-factories';
 
 describe('CartService', () => {
   let service: CartService;
@@ -18,7 +26,11 @@ describe('CartService', () => {
 
   const mockUser = createTestUser();
   const mockProduct = createTestProduct({ inventoryQuantity: 10 });
-  const mockCartItem = createTestCartItem({ userId: mockUser.id, productId: mockProduct.id, quantity: 2 });
+  const mockCartItem = createTestCartItem({
+    userId: mockUser.id,
+    productId: mockProduct.id,
+    quantity: 2,
+  });
 
   beforeEach(async () => {
     cartItemRepository = createMockRepository<CartItem>();
@@ -62,11 +74,16 @@ describe('CartService', () => {
     it('should add new item to cart', async () => {
       productRepository.findOne.mockResolvedValue(mockProduct);
       cartItemRepository.findOne.mockResolvedValue(null);
-      cartItemRepository.save.mockResolvedValue({ ...mockCartItem, quantity: 1 } as any);
+      cartItemRepository.save.mockResolvedValue({
+        ...mockCartItem,
+        quantity: 1,
+      } as any);
 
       const result = await service.addToCart(mockUser.id, addToCartDto);
 
-      expect(productRepository.findOne).toHaveBeenCalledWith({ where: { id: addToCartDto.productId } });
+      expect(productRepository.findOne).toHaveBeenCalledWith({
+        where: { id: addToCartDto.productId },
+      });
       expect(cartItemRepository.save).toHaveBeenCalled();
       expect(result.quantity).toBe(1);
     });
@@ -74,9 +91,15 @@ describe('CartService', () => {
     it('should update quantity if item already in cart', async () => {
       productRepository.findOne.mockResolvedValue(mockProduct);
       cartItemRepository.findOne.mockResolvedValue(mockCartItem);
-      cartItemRepository.save.mockResolvedValue({ ...mockCartItem, quantity: 3 } as any);
+      cartItemRepository.save.mockResolvedValue({
+        ...mockCartItem,
+        quantity: 3,
+      } as any);
 
-      const result = await service.addToCart(mockUser.id, { ...addToCartDto, quantity: 1 });
+      const result = await service.addToCart(mockUser.id, {
+        ...addToCartDto,
+        quantity: 1,
+      });
 
       expect(cartItemRepository.findOne).toHaveBeenCalledWith({
         where: { userId: mockUser.id, productId: addToCartDto.productId },
@@ -87,21 +110,30 @@ describe('CartService', () => {
     it('should throw NotFoundException if product not found', async () => {
       productRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.addToCart(mockUser.id, addToCartDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.addToCart(mockUser.id, addToCartDto),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if product inactive', async () => {
       const inactiveProduct = { ...mockProduct, isActive: false };
       productRepository.findOne.mockResolvedValue(inactiveProduct);
 
-      await expect(service.addToCart(mockUser.id, addToCartDto)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.addToCart(mockUser.id, addToCartDto),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if insufficient inventory', async () => {
-      productRepository.findOne.mockResolvedValue({ ...mockProduct, inventoryQuantity: 1 });
+      productRepository.findOne.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 1,
+      });
       cartItemRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.addToCart(mockUser.id, { ...addToCartDto, quantity: 5 })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.addToCart(mockUser.id, { ...addToCartDto, quantity: 5 }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -113,9 +145,16 @@ describe('CartService', () => {
     it('should update cart item quantity', async () => {
       cartItemRepository.findOne.mockResolvedValue(mockCartItem);
       productRepository.findOne.mockResolvedValue(mockProduct);
-      cartItemRepository.save.mockResolvedValue({ ...mockCartItem, quantity: 5 } as any);
+      cartItemRepository.save.mockResolvedValue({
+        ...mockCartItem,
+        quantity: 5,
+      } as any);
 
-      const result = await service.updateQuantity(mockUser.id, mockCartItem.id, updateCartDto);
+      const result = await service.updateQuantity(
+        mockUser.id,
+        mockCartItem.id,
+        updateCartDto,
+      );
 
       expect(cartItemRepository.findOne).toHaveBeenCalledWith({
         where: { id: mockCartItem.id, userId: mockUser.id },
@@ -126,14 +165,21 @@ describe('CartService', () => {
     it('should throw NotFoundException if cart item not found', async () => {
       cartItemRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.updateQuantity(mockUser.id, 'nonexistent', updateCartDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateQuantity(mockUser.id, 'nonexistent', updateCartDto),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if insufficient inventory', async () => {
       cartItemRepository.findOne.mockResolvedValue(mockCartItem);
-      productRepository.findOne.mockResolvedValue({ ...mockProduct, inventoryQuantity: 3 });
+      productRepository.findOne.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 3,
+      });
 
-      await expect(service.updateQuantity(mockUser.id, mockCartItem.id, { quantity: 5 })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateQuantity(mockUser.id, mockCartItem.id, { quantity: 5 }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -144,13 +190,18 @@ describe('CartService', () => {
 
       await service.removeFromCart(mockUser.id, mockCartItem.id);
 
-      expect(cartItemRepository.delete).toHaveBeenCalledWith({ id: mockCartItem.id, userId: mockUser.id });
+      expect(cartItemRepository.delete).toHaveBeenCalledWith({
+        id: mockCartItem.id,
+        userId: mockUser.id,
+      });
     });
 
     it('should throw NotFoundException if cart item not found', async () => {
       cartItemRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.removeFromCart(mockUser.id, 'nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.removeFromCart(mockUser.id, 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -160,7 +211,9 @@ describe('CartService', () => {
 
       await service.clearCart(mockUser.id);
 
-      expect(cartItemRepository.delete).toHaveBeenCalledWith({ userId: mockUser.id });
+      expect(cartItemRepository.delete).toHaveBeenCalledWith({
+        userId: mockUser.id,
+      });
     });
   });
 
@@ -170,7 +223,9 @@ describe('CartService', () => {
 
       const result = await service.getCartCount(mockUser.id);
 
-      expect(cartItemRepository.count).toHaveBeenCalledWith({ where: { userId: mockUser.id } });
+      expect(cartItemRepository.count).toHaveBeenCalledWith({
+        where: { userId: mockUser.id },
+      });
       expect(result).toBe(5);
     });
   });

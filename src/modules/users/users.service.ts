@@ -7,9 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { User, UserRole } from './users.entity';
+import { ReferralTier } from './referral-tier.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { ChangePasswordDto, UpdateProfileDto } from './dto/update-profile.dto';
+import { CreateReferralTierDto, UpdateReferralTierDto } from './dto/referral-tier.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import {
   buildPaginatedResponse,
@@ -21,6 +23,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(ReferralTier)
+    private referralTierRepository: Repository<ReferralTier>,
   ) {}
 
   async create(
@@ -269,6 +273,78 @@ export class UsersService {
 
     user.referredBy = referrer.id;
     await this.usersRepository.save(user);
+  }
+
+  async getReferralStats(): Promise<{
+    totalUsers: number;
+    usersWithReferrals: number;
+    totalReferrals: number;
+    topReferrers: Array<{
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+      referralCode: string | null;
+      referralCount: number;
+    }>;
+  }> {
+    const totalUsers = await this.usersRepository.count();
+    
+    const usersWithReferrals = await this.usersRepository
+      .createQueryBuilder('u')
+      .where('u.referredBy IS NOT NULL')
+      .getCount();
+
+    const totalReferrals = await this.usersRepository
+      .createQueryBuilder('referrer')
+      .leftJoin('referrer.referredUsers', 'referred')
+      .select('referrer.id', 'id')
+      .addSelect('referrer.firstName', 'firstName')
+      .addSelect('referrer.lastName', 'lastName')
+      .addSelect('referrer.email', 'email')
+      .addSelect('referrer.referralCode', 'referralCode')
+      .addSelect('COUNT(referred.id)', 'referralCount')
+      .where('referrer.referralCode IS NOT NULL')
+      .groupBy('referrer.id')
+      .having('COUNT(referred.id) > 0')
+      .orderBy('referralCount', 'DESC')
+      .getRawMany();
+
+    return {
+      totalUsers,
+      usersWithReferrals,
+      totalReferrals: usersWithReferrals,
+      topReferrers: totalReferrals.map((r) => ({
+        id: r.id,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        email: r.email,
+        referralCode: r.referralCode,
+        referralCount: Number(r.referralCount),
+      })),
+    };
+  }
+
+  async getReferralTiers(): Promise<ReferralTier[]> {
+    return this.referralTierRepository.find({ order: { minReferrals: 'ASC' } });
+  }
+
+  async createReferralTier(data: CreateReferralTierDto): Promise<ReferralTier> {
+    const tier = this.referralTierRepository.create(data);
+    return this.referralTierRepository.save(tier);
+  }
+
+  async updateReferralTier(id: string, data: UpdateReferralTierDto): Promise<ReferralTier> {
+    const tier = await this.referralTierRepository.findOne({ where: { id } });
+    if (!tier) {
+      throw new NotFoundException('سطح رفرال یافت نشد');
+    }
+    this.referralTierRepository.merge(tier, data);
+    return this.referralTierRepository.save(tier);
+  }
+
+  async deleteReferralTier(id: string): Promise<void> {
+    await this.referralTierRepository.delete(id);
   }
 
   private stripPassword(user: User): User {

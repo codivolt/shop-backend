@@ -1,5 +1,11 @@
 import { setupE2E, teardownE2E, getTestRequest } from '../setup/e2e.setup';
-import { createTestUser, createTestAdmin, createTestProduct, createTestCategory, createTestBrand } from '../utils/test-factories';
+import {
+  createTestUser,
+  createTestAdmin,
+  createTestProduct,
+  createTestCategory,
+  createTestBrand,
+} from '../utils/test-factories';
 
 let request: ReturnType<typeof getTestRequest>;
 let authToken: string;
@@ -70,7 +76,10 @@ describe('Users E2E Tests', () => {
     });
 
     it('should reject unauthorized', async () => {
-      await request.put('/api/users/me').send({ firstName: 'Test' }).expect(401);
+      await request
+        .put('/api/users/me')
+        .send({ firstName: 'Test' })
+        .expect(401);
     });
   });
 
@@ -85,7 +94,9 @@ describe('Users E2E Tests', () => {
         })
         .expect(200);
 
-      expect(response.body).toEqual({ message: 'رمز عبور با موفقیت به‌روزرسانی شد' });
+      expect(response.body).toEqual({
+        message: 'رمز عبور با موفقیت به‌روزرسانی شد',
+      });
     });
 
     it('should reject incorrect current password', async () => {
@@ -166,13 +177,15 @@ describe('Users E2E Tests', () => {
     describe('DELETE /api/users/:id', () => {
       it('should delete user for admin', async () => {
         // Create a user to delete
-        const deleteUserResponse = await request.post('/api/auth/register').send({
-          email: 'delete-e2e@example.com',
-          password: 'password123',
-          firstName: 'Delete',
-          lastName: 'Me',
-          phone: '09128887766',
-        });
+        const deleteUserResponse = await request
+          .post('/api/auth/register')
+          .send({
+            email: 'delete-e2e@example.com',
+            password: 'password123',
+            firstName: 'Delete',
+            lastName: 'Me',
+            phone: '09128887766',
+          });
 
         const response = await request
           .delete(`/api/users/${deleteUserResponse.body.user.id}`)

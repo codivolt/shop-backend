@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SearchController } from './search.controller';
 import { SearchService } from './search.service';
 import { SearchDto } from './search.dto';
-import { createTestProduct, createTestCategory, createTestBrand } from '../../../test/utils/test-factories';
+import {
+  createTestProduct,
+  createTestCategory,
+  createTestBrand,
+} from '../../../test/utils/test-factories';
 
 describe('SearchController', () => {
   let controller: SearchController;
@@ -10,7 +14,10 @@ describe('SearchController', () => {
 
   const mockCategory = createTestCategory();
   const mockBrand = createTestBrand();
-  const mockProduct = createTestProduct({ categoryId: mockCategory.id, brandId: mockBrand.id });
+  const mockProduct = createTestProduct({
+    categoryId: mockCategory.id,
+    brandId: mockBrand.id,
+  });
 
   beforeEach(async () => {
     searchService = {
@@ -20,9 +27,7 @@ describe('SearchController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [SearchController],
-      providers: [
-        { provide: SearchService, useValue: searchService },
-      ],
+      providers: [{ provide: SearchService, useValue: searchService }],
     }).compile();
 
     controller = module.get<SearchController>(SearchController);
@@ -91,7 +96,11 @@ describe('SearchController', () => {
         inStock: true,
         limit: 20,
       };
-      searchService.search.mockResolvedValue({ products: [], categories: [], brands: [] });
+      searchService.search.mockResolvedValue({
+        products: [],
+        categories: [],
+        brands: [],
+      });
 
       await controller.search(filteredDto);
 

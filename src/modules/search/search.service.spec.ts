@@ -7,7 +7,11 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SearchDto } from './search.dto';
 import { createMockRepository } from '../../../test/utils/mock-helpers';
-import { createTestProduct, createTestCategory, createTestBrand } from '../../../test/utils/test-factories';
+import {
+  createTestProduct,
+  createTestCategory,
+  createTestBrand,
+} from '../../../test/utils/test-factories';
 
 describe('SearchService', () => {
   let service: SearchService;
@@ -17,7 +21,10 @@ describe('SearchService', () => {
 
   const mockCategory = createTestCategory();
   const mockBrand = createTestBrand();
-  const mockProduct = createTestProduct({ categoryId: mockCategory.id, brandId: mockBrand.id });
+  const mockProduct = createTestProduct({
+    categoryId: mockCategory.id,
+    brandId: mockBrand.id,
+  });
 
   beforeEach(async () => {
     productRepository = createMockRepository<Product>();
@@ -78,7 +85,9 @@ describe('SearchService', () => {
 
     it('should search products by default', async () => {
       const products = [mockProduct];
-      productRepository.createQueryBuilder().getMany.mockResolvedValue(products);
+      productRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue(products);
 
       const result = await service.search(searchDto);
 
@@ -89,7 +98,9 @@ describe('SearchService', () => {
     it('should search categories when type is categories', async () => {
       const categories = [mockCategory];
       searchDto.type = 'categories';
-      categoryRepository.createQueryBuilder().getMany.mockResolvedValue(categories);
+      categoryRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue(categories);
 
       const result = await service.search(searchDto);
 
@@ -112,8 +123,12 @@ describe('SearchService', () => {
       const products = [mockProduct];
       const categories = [mockCategory];
       const brands = [mockBrand];
-      productRepository.createQueryBuilder().getMany.mockResolvedValue(products);
-      categoryRepository.createQueryBuilder().getMany.mockResolvedValue(categories);
+      productRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue(products);
+      categoryRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue(categories);
       brandRepository.createQueryBuilder().getMany.mockResolvedValue(brands);
 
       const result = await service.search(searchDto);
@@ -128,11 +143,15 @@ describe('SearchService', () => {
 
     it('should apply limit to results', async () => {
       searchDto.limit = 5;
-      productRepository.createQueryBuilder().getMany.mockResolvedValue([mockProduct]);
+      productRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue([mockProduct]);
 
       await service.search(searchDto);
 
-      expect(productRepository.createQueryBuilder().take).toHaveBeenCalledWith(5);
+      expect(productRepository.createQueryBuilder().take).toHaveBeenCalledWith(
+        5,
+      );
     });
 
     it('should apply filters to product search', async () => {
@@ -141,23 +160,39 @@ describe('SearchService', () => {
       searchDto.minPrice = 50000;
       searchDto.maxPrice = 200000;
       searchDto.inStock = true;
-      productRepository.createQueryBuilder().getMany.mockResolvedValue([mockProduct]);
+      productRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue([mockProduct]);
 
       await service.search(searchDto);
 
       const qb = productRepository.createQueryBuilder();
-      expect(qb.andWhere).toHaveBeenCalledWith('product.categoryId = :categoryId', { categoryId: 'cat-1' });
-      expect(qb.andWhere).toHaveBeenCalledWith('product.brandId = :brandId', { brandId: 'brand-1' });
-      expect(qb.andWhere).toHaveBeenCalledWith('product.price >= :minPrice', { minPrice: 50000 });
-      expect(qb.andWhere).toHaveBeenCalledWith('product.price <= :maxPrice', { maxPrice: 200000 });
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'product.categoryId = :categoryId',
+        { categoryId: 'cat-1' },
+      );
+      expect(qb.andWhere).toHaveBeenCalledWith('product.brandId = :brandId', {
+        brandId: 'brand-1',
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('product.price >= :minPrice', {
+        minPrice: 50000,
+      });
+      expect(qb.andWhere).toHaveBeenCalledWith('product.price <= :maxPrice', {
+        maxPrice: 200000,
+      });
       expect(qb.andWhere).toHaveBeenCalledWith('product.inventoryQuantity > 0');
     });
   });
 
   describe('getSuggestions', () => {
     it('should return search suggestions', async () => {
-      const products = [mockProduct, createTestProduct({ name: 'Test Product 2' })];
-      productRepository.createQueryBuilder().getMany.mockResolvedValue(products);
+      const products = [
+        mockProduct,
+        createTestProduct({ name: 'Test Product 2' }),
+      ];
+      productRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue(products);
 
       const result = await service.getSuggestions('test', 5);
 
@@ -169,7 +204,9 @@ describe('SearchService', () => {
     });
 
     it('should limit suggestions', async () => {
-      productRepository.createQueryBuilder().getMany.mockResolvedValue([mockProduct]);
+      productRepository
+        .createQueryBuilder()
+        .getMany.mockResolvedValue([mockProduct]);
 
       const result = await service.getSuggestions('test', 1);
 

@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, ConflictException, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  ConflictException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -38,9 +43,7 @@ describe('AuthController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [
-        { provide: AuthService, useValue: authService },
-      ],
+      providers: [{ provide: AuthService, useValue: authService }],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -66,9 +69,13 @@ describe('AuthController', () => {
     });
 
     it('should throw ConflictException if email exists', async () => {
-      authService.register.mockRejectedValue(new ConflictException('ایمیل قبلاً ثبت شده است'));
+      authService.register.mockRejectedValue(
+        new ConflictException('ایمیل قبلاً ثبت شده است'),
+      );
 
-      await expect(controller.register(registerDto)).rejects.toThrow(ConflictException);
+      await expect(controller.register(registerDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -88,9 +95,13 @@ describe('AuthController', () => {
     });
 
     it('should throw UnauthorizedException if credentials invalid', async () => {
-      authService.login.mockRejectedValue(new UnauthorizedException('ایمیل یا رمز عبور اشتباه است'));
+      authService.login.mockRejectedValue(
+        new UnauthorizedException('ایمیل یا رمز عبور اشتباه است'),
+      );
 
-      await expect(controller.login(loginDto, mockUser)).rejects.toThrow(UnauthorizedException);
+      await expect(controller.login(loginDto, mockUser)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -111,10 +122,15 @@ describe('AuthController', () => {
 
     it('should throw HttpException if resend cooldown active', async () => {
       authService.sendCode.mockRejectedValue(
-        new HttpException('برای ارسال مجدد کد کمی صبر کنید', HttpStatus.TOO_MANY_REQUESTS)
+        new HttpException(
+          'برای ارسال مجدد کد کمی صبر کنید',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ),
       );
 
-      await expect(controller.sendCode(sendCodeDto)).rejects.toThrow(HttpException);
+      await expect(controller.sendCode(sendCodeDto)).rejects.toThrow(
+        HttpException,
+      );
     });
   });
 
@@ -134,15 +150,23 @@ describe('AuthController', () => {
     });
 
     it('should throw UnauthorizedException if code invalid', async () => {
-      authService.verifyCode.mockRejectedValue(new UnauthorizedException('کد تایید اشتباه یا منقضی شده است'));
+      authService.verifyCode.mockRejectedValue(
+        new UnauthorizedException('کد تایید اشتباه یا منقضی شده است'),
+      );
 
-      await expect(controller.verifyCode(verifyCodeDto)).rejects.toThrow(UnauthorizedException);
+      await expect(controller.verifyCode(verifyCodeDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if code expired', async () => {
-      authService.verifyCode.mockRejectedValue(new UnauthorizedException('کد تایید منقضی شده است'));
+      authService.verifyCode.mockRejectedValue(
+        new UnauthorizedException('کد تایید منقضی شده است'),
+      );
 
-      await expect(controller.verifyCode(verifyCodeDto)).rejects.toThrow(UnauthorizedException);
+      await expect(controller.verifyCode(verifyCodeDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 

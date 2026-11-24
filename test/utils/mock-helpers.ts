@@ -2,12 +2,17 @@ import { Repository } from 'typeorm';
 import { User } from '../../src/modules/users/users.entity';
 import { VerificationCode } from '../../src/modules/auth/verification-code.entity';
 
-export const createMockRepository = <T extends { id: string }>(): Partial<Repository<T>> => {
+export const createMockRepository = <T extends { id: string }>(): Partial<
+  Repository<T>
+> => {
   const entities: T[] = [];
 
   return {
     create: jest.fn((dto: Partial<T>) => {
-      const entity = { id: `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, ...dto } as T;
+      const entity = {
+        id: `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        ...dto,
+      } as T;
       return entity;
     }),
     save: jest.fn(async (entity: T) => {
@@ -21,18 +26,32 @@ export const createMockRepository = <T extends { id: string }>(): Partial<Reposi
     }),
     findOne: jest.fn(async (options: any) => {
       const where = options.where || options;
-      return entities.find((e) => Object.entries(where).every(([key, value]) => e[key as keyof T] === value)) || null;
+      return (
+        entities.find((e) =>
+          Object.entries(where).every(
+            ([key, value]) => e[key as keyof T] === value,
+          ),
+        ) || null
+      );
     }),
     find: jest.fn(async (options?: any) => {
       if (!options?.where) return entities;
       const where = options.where;
-      return entities.filter((e) => Object.entries(where).every(([key, value]) => e[key as keyof T] === value));
+      return entities.filter((e) =>
+        Object.entries(where).every(
+          ([key, value]) => e[key as keyof T] === value,
+        ),
+      );
     }),
     findAndCount: jest.fn(async (options?: any) => {
       let result = entities;
       if (options?.where) {
         const where = options.where;
-        result = entities.filter((e) => Object.entries(where).every(([key, value]) => e[key as keyof T] === value));
+        result = entities.filter((e) =>
+          Object.entries(where).every(
+            ([key, value]) => e[key as keyof T] === value,
+          ),
+        );
       }
       if (options?.skip) result = result.slice(options.skip);
       if (options?.take) result = result.slice(0, options.take);
@@ -163,7 +182,9 @@ export const mockSmsService = {
     return { success: true };
   }),
   sendBulk: jest.fn(async (phones: string[], message: string) => {
-    console.log(`[MOCK BULK SMS] To: ${phones.join(', ')}, Message: ${message}`);
+    console.log(
+      `[MOCK BULK SMS] To: ${phones.join(', ')}, Message: ${message}`,
+    );
     return { success: true, sent: phones.length };
   }),
 };
@@ -175,9 +196,15 @@ export const mockPermissionsService = {
     customer: ['orders:read', 'cart:write', 'profile:write'],
   })),
   getUserPermissions: jest.fn(async (userId: string) => []),
-  assignPermissionToUser: jest.fn(async (userId: string, permissionKey: string) => ({ success: true })),
-  removePermissionFromUser: jest.fn(async (userId: string, permissionKey: string) => ({ success: true })),
-  hasPermission: jest.fn(async (userId: string, permissionKey: string) => false),
+  assignPermissionToUser: jest.fn(
+    async (userId: string, permissionKey: string) => ({ success: true }),
+  ),
+  removePermissionFromUser: jest.fn(
+    async (userId: string, permissionKey: string) => ({ success: true }),
+  ),
+  hasPermission: jest.fn(
+    async (userId: string, permissionKey: string) => false,
+  ),
 };
 
 export const mockConfigService = {

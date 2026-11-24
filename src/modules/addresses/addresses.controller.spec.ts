@@ -4,7 +4,10 @@ import { AddressesController } from './addresses.controller';
 import { AddressesService } from './addresses.service';
 import { Address } from './address.entity';
 import { CreateAddressDto, UpdateAddressDto } from './dto/address.dto';
-import { createTestAddress, createTestUser } from '../../../test/utils/test-factories';
+import {
+  createTestAddress,
+  createTestUser,
+} from '../../../test/utils/test-factories';
 
 describe('AddressesController', () => {
   let controller: AddressesController;
@@ -25,9 +28,7 @@ describe('AddressesController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AddressesController],
-      providers: [
-        { provide: AddressesService, useValue: addressesService },
-      ],
+      providers: [{ provide: AddressesService, useValue: addressesService }],
     }).compile();
 
     controller = module.get<AddressesController>(AddressesController);
@@ -47,12 +48,18 @@ describe('AddressesController', () => {
     };
 
     it('should create address and return it', async () => {
-      const newAddress = createTestAddress({ ...createDto, userId: mockUser.id });
+      const newAddress = createTestAddress({
+        ...createDto,
+        userId: mockUser.id,
+      });
       addressesService.create.mockResolvedValue(newAddress);
 
       const result = await controller.create(createDto, mockUser);
 
-      expect(addressesService.create).toHaveBeenCalledWith(mockUser.id, createDto);
+      expect(addressesService.create).toHaveBeenCalledWith(
+        mockUser.id,
+        createDto,
+      );
       expect(result).toEqual(newAddress);
     });
   });
@@ -75,14 +82,21 @@ describe('AddressesController', () => {
 
       const result = await controller.findOne(mockAddress.id, mockUser);
 
-      expect(addressesService.findOne).toHaveBeenCalledWith(mockUser.id, mockAddress.id);
+      expect(addressesService.findOne).toHaveBeenCalledWith(
+        mockUser.id,
+        mockAddress.id,
+      );
       expect(result).toEqual(mockAddress);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      addressesService.findOne.mockRejectedValue(new NotFoundException('آدرس یافت نشد'));
+      addressesService.findOne.mockRejectedValue(
+        new NotFoundException('آدرس یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent', mockUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent', mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -96,16 +110,28 @@ describe('AddressesController', () => {
       const updatedAddress = { ...mockAddress, ...updateDto };
       addressesService.update.mockResolvedValue(updatedAddress);
 
-      const result = await controller.update(mockAddress.id, updateDto, mockUser);
+      const result = await controller.update(
+        mockAddress.id,
+        updateDto,
+        mockUser,
+      );
 
-      expect(addressesService.update).toHaveBeenCalledWith(mockUser.id, mockAddress.id, updateDto);
+      expect(addressesService.update).toHaveBeenCalledWith(
+        mockUser.id,
+        mockAddress.id,
+        updateDto,
+      );
       expect(result).toEqual(updatedAddress);
     });
 
     it('should throw NotFoundException if address not found', async () => {
-      addressesService.update.mockRejectedValue(new NotFoundException('آدرس یافت نشد'));
+      addressesService.update.mockRejectedValue(
+        new NotFoundException('آدرس یافت نشد'),
+      );
 
-      await expect(controller.update('nonexistent', updateDto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.update('nonexistent', updateDto, mockUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -116,7 +142,10 @@ describe('AddressesController', () => {
 
       const result = await controller.setDefault(mockAddress.id, mockUser);
 
-      expect(addressesService.setDefault).toHaveBeenCalledWith(mockUser.id, mockAddress.id);
+      expect(addressesService.setDefault).toHaveBeenCalledWith(
+        mockUser.id,
+        mockAddress.id,
+      );
       expect(result).toEqual(updatedAddress);
     });
   });
@@ -127,14 +156,21 @@ describe('AddressesController', () => {
 
       const result = await controller.remove(mockAddress.id, mockUser);
 
-      expect(addressesService.remove).toHaveBeenCalledWith(mockUser.id, mockAddress.id);
+      expect(addressesService.remove).toHaveBeenCalledWith(
+        mockUser.id,
+        mockAddress.id,
+      );
       expect(result).toEqual({ message: 'آدرس با موفقیت حذف شد' });
     });
 
     it('should throw NotFoundException if address not found', async () => {
-      addressesService.remove.mockRejectedValue(new NotFoundException('آدرس یافت نشد'));
+      addressesService.remove.mockRejectedValue(
+        new NotFoundException('آدرس یافت نشد'),
+      );
 
-      await expect(controller.remove('nonexistent', mockUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('nonexistent', mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

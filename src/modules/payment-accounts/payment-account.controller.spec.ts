@@ -3,8 +3,14 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PaymentAccountController } from './payment-account.controller';
 import { PaymentAccountService } from './payment-account.service';
 import { PaymentAccount } from './payment-account.entity';
-import { CreatePaymentAccountDto, UpdatePaymentAccountDto } from './dto/payment-account.dto';
-import { createTestPaymentAccount, createTestUser } from '../../../test/utils/test-factories';
+import {
+  CreatePaymentAccountDto,
+  UpdatePaymentAccountDto,
+} from './dto/payment-account.dto';
+import {
+  createTestPaymentAccount,
+  createTestUser,
+} from '../../../test/utils/test-factories';
 
 describe('PaymentAccountController', () => {
   let controller: PaymentAccountController;
@@ -44,12 +50,18 @@ describe('PaymentAccountController', () => {
     };
 
     it('should create payment account and return it', async () => {
-      const newAccount = createTestPaymentAccount({ ...createDto, userId: mockUser.id });
+      const newAccount = createTestPaymentAccount({
+        ...createDto,
+        userId: mockUser.id,
+      });
       paymentAccountService.create.mockResolvedValue(newAccount);
 
       const result = await controller.create(createDto, mockUser);
 
-      expect(paymentAccountService.create).toHaveBeenCalledWith(mockUser.id, createDto);
+      expect(paymentAccountService.create).toHaveBeenCalledWith(
+        mockUser.id,
+        createDto,
+      );
       expect(result).toEqual(newAccount);
     });
   });
@@ -72,14 +84,21 @@ describe('PaymentAccountController', () => {
 
       const result = await controller.findOne(mockPaymentAccount.id, mockUser);
 
-      expect(paymentAccountService.findOne).toHaveBeenCalledWith(mockUser.id, mockPaymentAccount.id);
+      expect(paymentAccountService.findOne).toHaveBeenCalledWith(
+        mockUser.id,
+        mockPaymentAccount.id,
+      );
       expect(result).toEqual(mockPaymentAccount);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      paymentAccountService.findOne.mockRejectedValue(new NotFoundException('حساب پرداخت یافت نشد'));
+      paymentAccountService.findOne.mockRejectedValue(
+        new NotFoundException('حساب پرداخت یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent', mockUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent', mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -93,16 +112,28 @@ describe('PaymentAccountController', () => {
       const updatedAccount = { ...mockPaymentAccount, ...updateDto };
       paymentAccountService.update.mockResolvedValue(updatedAccount);
 
-      const result = await controller.update(mockPaymentAccount.id, updateDto, mockUser);
+      const result = await controller.update(
+        mockPaymentAccount.id,
+        updateDto,
+        mockUser,
+      );
 
-      expect(paymentAccountService.update).toHaveBeenCalledWith(mockUser.id, mockPaymentAccount.id, updateDto);
+      expect(paymentAccountService.update).toHaveBeenCalledWith(
+        mockUser.id,
+        mockPaymentAccount.id,
+        updateDto,
+      );
       expect(result).toEqual(updatedAccount);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      paymentAccountService.update.mockRejectedValue(new NotFoundException('حساب پرداخت یافت نشد'));
+      paymentAccountService.update.mockRejectedValue(
+        new NotFoundException('حساب پرداخت یافت نشد'),
+      );
 
-      await expect(controller.update('nonexistent', updateDto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.update('nonexistent', updateDto, mockUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -111,9 +142,15 @@ describe('PaymentAccountController', () => {
       const updatedAccount = { ...mockPaymentAccount, isDefault: true };
       paymentAccountService.setDefault.mockResolvedValue(updatedAccount);
 
-      const result = await controller.setDefault(mockPaymentAccount.id, mockUser);
+      const result = await controller.setDefault(
+        mockPaymentAccount.id,
+        mockUser,
+      );
 
-      expect(paymentAccountService.setDefault).toHaveBeenCalledWith(mockUser.id, mockPaymentAccount.id);
+      expect(paymentAccountService.setDefault).toHaveBeenCalledWith(
+        mockUser.id,
+        mockPaymentAccount.id,
+      );
       expect(result).toEqual(updatedAccount);
     });
   });
@@ -124,14 +161,21 @@ describe('PaymentAccountController', () => {
 
       const result = await controller.remove(mockPaymentAccount.id, mockUser);
 
-      expect(paymentAccountService.remove).toHaveBeenCalledWith(mockUser.id, mockPaymentAccount.id);
+      expect(paymentAccountService.remove).toHaveBeenCalledWith(
+        mockUser.id,
+        mockPaymentAccount.id,
+      );
       expect(result).toEqual({ message: 'حساب پرداخت با موفقیت حذف شد' });
     });
 
     it('should throw NotFoundException if not found', async () => {
-      paymentAccountService.remove.mockRejectedValue(new NotFoundException('حساب پرداخت یافت نشد'));
+      paymentAccountService.remove.mockRejectedValue(
+        new NotFoundException('حساب پرداخت یافت نشد'),
+      );
 
-      await expect(controller.remove('nonexistent', mockUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('nonexistent', mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

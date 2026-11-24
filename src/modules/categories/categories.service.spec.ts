@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CategoriesService } from './categories.service';
@@ -15,7 +19,11 @@ describe('CategoriesService', () => {
   let categoryRepository: jest.Mocked<Partial<Repository<Category>>>;
 
   const mockCategory = createTestCategory();
-  const mockChildCategory = createTestCategory({ id: 'child-1', parentId: mockCategory.id, name: 'Child Category' });
+  const mockChildCategory = createTestCategory({
+    id: 'child-1',
+    parentId: mockCategory.id,
+    name: 'Child Category',
+  });
 
   beforeEach(async () => {
     categoryRepository = createMockRepository<Category>();
@@ -54,13 +62,17 @@ describe('CategoriesService', () => {
     it('should throw ConflictException if slug already exists', async () => {
       categoryRepository.findOne.mockResolvedValue(mockCategory);
 
-      await expect(service.create({ ...createDto, slug: mockCategory.slug })).rejects.toThrow(ConflictException);
+      await expect(
+        service.create({ ...createDto, slug: mockCategory.slug }),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw NotFoundException if parentId does not exist', async () => {
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create({ ...createDto, parentId: 'nonexistent' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.create({ ...createDto, parentId: 'nonexistent' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -69,7 +81,10 @@ describe('CategoriesService', () => {
 
     it('should return paginated categories', async () => {
       const categories = [mockCategory, mockChildCategory];
-      categoryRepository.findAndCount.mockResolvedValue([categories, categories.length]);
+      categoryRepository.findAndCount.mockResolvedValue([
+        categories,
+        categories.length,
+      ]);
 
       const result = await service.findAll(query);
 
@@ -78,13 +93,21 @@ describe('CategoriesService', () => {
     });
 
     it('should filter by parentId', async () => {
-      categoryRepository.findAndCount.mockResolvedValue([[mockChildCategory], 1]);
+      categoryRepository.findAndCount.mockResolvedValue([
+        [mockChildCategory],
+        1,
+      ]);
 
-      const result = await service.findAll({ ...query, parentId: mockCategory.id });
+      const result = await service.findAll({
+        ...query,
+        parentId: mockCategory.id,
+      });
 
-      expect(categoryRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ parentId: mockCategory.id }),
-      }));
+      expect(categoryRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ parentId: mockCategory.id }),
+        }),
+      );
     });
 
     it('should filter by isActive', async () => {
@@ -92,9 +115,11 @@ describe('CategoriesService', () => {
 
       const result = await service.findAll({ ...query, isActive: true });
 
-      expect(categoryRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ isActive: true }),
-      }));
+      expect(categoryRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
     });
 
     it('should search by name', async () => {
@@ -102,12 +127,14 @@ describe('CategoriesService', () => {
 
       const result = await service.findAll({ ...query, search: 'Category' });
 
-      expect(categoryRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.arrayContaining([
-          expect.objectContaining({ name: expect.anything() }),
-          expect.objectContaining({ slug: expect.anything() }),
-        ]),
-      }));
+      expect(categoryRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.arrayContaining([
+            expect.objectContaining({ name: expect.anything() }),
+            expect.objectContaining({ slug: expect.anything() }),
+          ]),
+        }),
+      );
     });
   });
 
@@ -125,13 +152,17 @@ describe('CategoriesService', () => {
 
       const result = await service.findOneBySlug(mockCategory.slug);
 
-      expect(categoryRepository.findOne).toHaveBeenCalledWith({ where: { slug: mockCategory.slug } });
+      expect(categoryRepository.findOne).toHaveBeenCalledWith({
+        where: { slug: mockCategory.slug },
+      });
     });
 
     it('should throw NotFoundException if not found', async () => {
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -148,7 +179,9 @@ describe('CategoriesService', () => {
 
       const result = await service.update(mockCategory.id, updateDto);
 
-      expect(categoryRepository.findOne).toHaveBeenCalledWith({ where: { id: mockCategory.id } });
+      expect(categoryRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockCategory.id },
+      });
       expect(categoryRepository.merge).toHaveBeenCalled();
       expect(result.name).toBe('Updated Category');
     });
@@ -156,7 +189,9 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if new slug already exists', async () => {
@@ -164,7 +199,9 @@ describe('CategoriesService', () => {
       categoryRepository.findOne.mockResolvedValueOnce(mockCategory);
       categoryRepository.findOne.mockResolvedValueOnce(existingCategory);
 
-      await expect(service.update(mockCategory.id, { slug: 'existing-slug' })).rejects.toThrow(ConflictException);
+      await expect(
+        service.update(mockCategory.id, { slug: 'existing-slug' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -181,21 +218,33 @@ describe('CategoriesService', () => {
     it('should throw NotFoundException if category not found', async () => {
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if category has children', async () => {
-      const categoryWithChildren = { ...mockCategory, children: [mockChildCategory] };
+      const categoryWithChildren = {
+        ...mockCategory,
+        children: [mockChildCategory],
+      };
       categoryRepository.findOne.mockResolvedValue(categoryWithChildren);
 
-      await expect(service.remove(mockCategory.id)).rejects.toThrow(BadRequestException);
+      await expect(service.remove(mockCategory.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if category has products', async () => {
-      const categoryWithProducts = { ...mockCategory, products: [{ id: 'prod-1' }] };
+      const categoryWithProducts = {
+        ...mockCategory,
+        products: [{ id: 'prod-1' }],
+      };
       categoryRepository.findOne.mockResolvedValue(categoryWithProducts);
 
-      await expect(service.remove(mockCategory.id)).rejects.toThrow(BadRequestException);
+      await expect(service.remove(mockCategory.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 

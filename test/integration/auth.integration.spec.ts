@@ -8,7 +8,12 @@ import { AuthService } from '../../src/modules/auth/auth.service';
 import { UsersService } from '../../src/modules/users/users.service';
 import { User, UserRole } from '../../src/modules/users/users.entity';
 import { VerificationCode } from '../../src/modules/auth/verification-code.entity';
-import { createIntegrationModule, getRepository, createMockUser, createTestUser } from '../setup/integration.setup';
+import {
+  createIntegrationModule,
+  getRepository,
+  createMockUser,
+  createTestUser,
+} from '../setup/integration.setup';
 
 describe('Auth Module Integration Tests', () => {
   let module: TestingModule;
@@ -18,10 +23,7 @@ describe('Auth Module Integration Tests', () => {
   let verificationCodeRepository: Repository<VerificationCode>;
 
   beforeAll(async () => {
-    module = await createIntegrationModule([
-      AuthModule,
-      UsersModule,
-    ]);
+    module = await createIntegrationModule([AuthModule, UsersModule]);
 
     authService = module.get<AuthService>(AuthService);
     usersService = module.get<UsersService>(UsersService);
@@ -59,7 +61,9 @@ describe('Auth Module Integration Tests', () => {
         role: UserRole.CUSTOMER,
       });
 
-      const savedUser = await userRepository.findOne({ where: { email: registerDto.email } });
+      const savedUser = await userRepository.findOne({
+        where: { email: registerDto.email },
+      });
       expect(savedUser).toBeDefined();
       expect(savedUser!.password).toBeUndefined();
     });
@@ -75,7 +79,9 @@ describe('Auth Module Integration Tests', () => {
 
       await authService.register(registerDto);
 
-      await expect(authService.register(registerDto)).rejects.toThrow('ایمیل قبلاً ثبت شده است');
+      await expect(authService.register(registerDto)).rejects.toThrow(
+        'ایمیل قبلاً ثبت شده است',
+      );
     });
 
     it('should send and verify OTP code', async () => {
@@ -86,11 +92,16 @@ describe('Auth Module Integration Tests', () => {
       expect(sendResult).toEqual({ message: 'کد تایید ارسال شد' });
 
       // Get the saved code
-      const verificationCode = await verificationCodeRepository.findOne({ where: { phone } });
+      const verificationCode = await verificationCodeRepository.findOne({
+        where: { phone },
+      });
       expect(verificationCode).toBeDefined();
 
       // Verify code
-      const verifyResult = await authService.verifyCode({ phone, code: verificationCode!.code });
+      const verifyResult = await authService.verifyCode({
+        phone,
+        code: verificationCode!.code,
+      });
       expect(verifyResult).toHaveProperty('access_token');
       expect(verifyResult.user.phone).toBe(phone);
     });
@@ -99,7 +110,9 @@ describe('Auth Module Integration Tests', () => {
       const phone = '09129998877';
       await authService.sendCode({ phone });
 
-      await expect(authService.verifyCode({ phone, code: '000000' })).rejects.toThrow('کد تایید اشتباه است');
+      await expect(
+        authService.verifyCode({ phone, code: '000000' }),
+      ).rejects.toThrow('کد تایید اشتباه است');
     });
 
     it('should reject expired OTP code', async () => {
@@ -110,14 +123,22 @@ describe('Auth Module Integration Tests', () => {
         expiresAt: new Date(Date.now() - 1000),
       });
 
-      await expect(authService.verifyCode({ phone, code: '123456' })).rejects.toThrow('کد تایید منقضی شده است');
+      await expect(
+        authService.verifyCode({ phone, code: '123456' }),
+      ).rejects.toThrow('کد تایید منقضی شده است');
     });
 
     it('should login with phone and password', async () => {
-      const user = createTestUser({ phone: '09127776655', password: 'password123' });
+      const user = createTestUser({
+        phone: '09127776655',
+        password: 'password123',
+      });
       await userRepository.save(user);
 
-      const validatedUser = await authService.validateUserByPhone('09127776655', 'password123');
+      const validatedUser = await authService.validateUserByPhone(
+        '09127776655',
+        'password123',
+      );
       expect(validatedUser).toBeDefined();
       expect(validatedUser.phone).toBe('09127776655');
 
@@ -126,17 +147,24 @@ describe('Auth Module Integration Tests', () => {
     });
 
     it('should throw on invalid password', async () => {
-      const user = createTestUser({ phone: '09126665544', password: 'password123' });
+      const user = createTestUser({
+        phone: '09126665544',
+        password: 'password123',
+      });
       await userRepository.save(user);
 
-      await expect(authService.validateUserByPhone('09126665544', 'wrongpassword')).rejects.toThrow('شماره موبایل یا رمز عبور اشتباه است');
+      await expect(
+        authService.validateUserByPhone('09126665544', 'wrongpassword'),
+      ).rejects.toThrow('شماره موبایل یا رمز عبور اشتباه است');
     });
 
     it('should throw on inactive user', async () => {
       const user = createTestUser({ phone: '09125554433', isActive: false });
       await userRepository.save(user);
 
-      await expect(authService.validateUserByPhone('09125554433', 'password123')).rejects.toThrow('حساب کاربری غیرفعال است');
+      await expect(
+        authService.validateUserByPhone('09125554433', 'password123'),
+      ).rejects.toThrow('حساب کاربری غیرفعال است');
     });
   });
 

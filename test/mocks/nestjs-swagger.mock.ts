@@ -15,7 +15,9 @@ export const ApiResponse = createDecorator('ApiResponse');
 export const ApiOkResponse = createDecorator('ApiOkResponse');
 export const ApiCreatedResponse = createDecorator('ApiCreatedResponse');
 export const ApiBadRequestResponse = createDecorator('ApiBadRequestResponse');
-export const ApiUnauthorizedResponse = createDecorator('ApiUnauthorizedResponse');
+export const ApiUnauthorizedResponse = createDecorator(
+  'ApiUnauthorizedResponse',
+);
 export const ApiForbiddenResponse = createDecorator('ApiForbiddenResponse');
 export const ApiNotFoundResponse = createDecorator('ApiNotFoundResponse');
 export const ApiBody = createDecorator('ApiBody');
@@ -45,13 +47,27 @@ export const SwaggerModule = {
 };
 
 export class DocumentBuilder {
-  setTitle(title: string) { return this; }
-  setDescription(description: string) { return this; }
-  setVersion(version: string) { return this; }
-  addBearerAuth() { return this; }
-  addApiKey() { return this; }
-  addTag(tag: string) { return this; }
-  build() { return {}; }
+  setTitle(title: string) {
+    return this;
+  }
+  setDescription(description: string) {
+    return this;
+  }
+  setVersion(version: string) {
+    return this;
+  }
+  addBearerAuth() {
+    return this;
+  }
+  addApiKey() {
+    return this;
+  }
+  addTag(tag: string) {
+    return this;
+  }
+  build() {
+    return {};
+  }
 }
 
 export const swagger = {

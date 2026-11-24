@@ -10,27 +10,40 @@ export const createTestModule = async (
   const { ConfigModule } = await import('@nestjs/config');
   const { TypeOrmModule } = await import('@nestjs/typeorm');
   const { DataSource, Repository } = await import('typeorm');
-  
+
   // Import entities
   const { User } = await import('../../src/modules/users/users.entity');
   const { UserRole } = await import('../../src/modules/users/users.entity');
-  const { VerificationCode } = await import('../../src/modules/auth/verification-code.entity');
-  const { Category } = await import('../../src/modules/categories/category.entity');
-  const { CategoryAttribute } = await import('../../src/modules/categories/category-attribute.entity');
+  const { VerificationCode } =
+    await import('../../src/modules/auth/verification-code.entity');
+  const { Category } =
+    await import('../../src/modules/categories/category.entity');
+  const { CategoryAttribute } =
+    await import('../../src/modules/categories/category-attribute.entity');
   const { Brand } = await import('../../src/modules/brands/brand.entity');
   const { Product } = await import('../../src/modules/products/product.entity');
-  const { ProductImage } = await import('../../src/modules/products/product-image.entity');
-  const { ProductAttributeValue } = await import('../../src/modules/products/product-attribute-value.entity');
+  const { ProductImage } =
+    await import('../../src/modules/products/product-image.entity');
+  const { ProductAttributeValue } =
+    await import('../../src/modules/products/product-attribute-value.entity');
   const { Order } = await import('../../src/modules/orders/order.entity');
-  const { OrderItem } = await import('../../src/modules/orders/order-item.entity');
+  const { OrderItem } =
+    await import('../../src/modules/orders/order-item.entity');
   const { CartItem } = await import('../../src/modules/cart/cart-item.entity');
-  const { Address } = await import('../../src/modules/addresses/address.entity');
-  const { DeliveryMethod } = await import('../../src/modules/delivery/delivery-method.entity');
-  const { PaymentAccount } = await import('../../src/modules/payment-accounts/payment-account.entity');
-  const { Permission } = await import('../../src/modules/permissions/permission.entity');
-  const { RolePermission } = await import('../../src/modules/permissions/role-permission.entity');
-  const { UserPermission } = await import('../../src/modules/permissions/user-permission.entity');
-  const { Notification } = await import('../../src/modules/notifications/notification.entity');
+  const { Address } =
+    await import('../../src/modules/addresses/address.entity');
+  const { DeliveryMethod } =
+    await import('../../src/modules/delivery/delivery-method.entity');
+  const { PaymentAccount } =
+    await import('../../src/modules/payment-accounts/payment-account.entity');
+  const { Permission } =
+    await import('../../src/modules/permissions/permission.entity');
+  const { RolePermission } =
+    await import('../../src/modules/permissions/role-permission.entity');
+  const { UserPermission } =
+    await import('../../src/modules/permissions/user-permission.entity');
+  const { Notification } =
+    await import('../../src/modules/notifications/notification.entity');
 
   const testEntities = [
     User,
@@ -104,10 +117,7 @@ export const createTestModule = async (
   }).compile();
 };
 
-export const getRepository = <T>(
-  module: any,
-  entity: new () => T,
-): any => {
+export const getRepository = <T>(module: any, entity: new () => T): any => {
   const dataSource = module.get(DataSource);
   return dataSource.getRepository(entity);
 };

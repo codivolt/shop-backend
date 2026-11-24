@@ -1,5 +1,10 @@
 import { setupE2E, teardownE2E, getTestRequest } from '../setup/e2e.setup';
-import { createTestAdmin, createTestCategory, createTestBrand, createTestProduct } from '../utils/test-factories';
+import {
+  createTestAdmin,
+  createTestCategory,
+  createTestBrand,
+  createTestProduct,
+} from '../utils/test-factories';
 
 let request: ReturnType<typeof getTestRequest>;
 let adminToken: string;
@@ -129,9 +134,12 @@ describe('Products E2E Tests', () => {
   describe('GET /api/products/:id', () => {
     it('should return product by id', async () => {
       // First get a product from the list
-      const listResponse = await request.get('/api/products').query({ limit: 1 }).expect(200);
+      const listResponse = await request
+        .get('/api/products')
+        .query({ limit: 1 })
+        .expect(200);
       const productId = listResponse.body.data[0]?.id;
-      
+
       if (!productId) return; // Skip if no products
 
       const response = await request
@@ -150,9 +158,12 @@ describe('Products E2E Tests', () => {
 
   describe('GET /api/products/slug/:slug', () => {
     it('should return product by slug', async () => {
-      const listResponse = await request.get('/api/products').query({ limit: 1 }).expect(200);
+      const listResponse = await request
+        .get('/api/products')
+        .query({ limit: 1 })
+        .expect(200);
       const slug = listResponse.body.data[0]?.slug;
-      
+
       if (!slug) return;
 
       const response = await request
@@ -166,9 +177,12 @@ describe('Products E2E Tests', () => {
   describe('Admin endpoints', () => {
     describe('PATCH /api/products/:id', () => {
       it('should update product for admin', async () => {
-        const listResponse = await request.get('/api/products').query({ limit: 1 }).expect(200);
+        const listResponse = await request
+          .get('/api/products')
+          .query({ limit: 1 })
+          .expect(200);
         const productId = listResponse.body.data[0]?.id;
-        
+
         if (!productId) return;
 
         const response = await request

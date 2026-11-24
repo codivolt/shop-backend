@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CategoriesController } from './categories.controller';
 import { CategoriesService } from './categories.service';
 import { Category } from './category.entity';
@@ -13,7 +17,10 @@ describe('CategoriesController', () => {
   let categoriesService: jest.Mocked<Partial<CategoriesService>>;
 
   const mockCategory = createTestCategory();
-  const mockChildCategory = createTestCategory({ id: 'child-1', parentId: mockCategory.id });
+  const mockChildCategory = createTestCategory({
+    id: 'child-1',
+    parentId: mockCategory.id,
+  });
   const mockPaginatedResponse: PaginatedResponse<Category> = {
     data: [mockCategory, mockChildCategory],
     total: 2,
@@ -37,9 +44,7 @@ describe('CategoriesController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CategoriesController],
-      providers: [
-        { provide: CategoriesService, useValue: categoriesService },
-      ],
+      providers: [{ provide: CategoriesService, useValue: categoriesService }],
     }).compile();
 
     controller = module.get<CategoriesController>(CategoriesController);
@@ -64,9 +69,13 @@ describe('CategoriesController', () => {
     });
 
     it('should throw ConflictException if slug exists', async () => {
-      categoriesService.create.mockRejectedValue(new ConflictException('اسلاگ تکراری است'));
+      categoriesService.create.mockRejectedValue(
+        new ConflictException('اسلاگ تکراری است'),
+      );
 
-      await expect(controller.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(controller.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -83,7 +92,13 @@ describe('CategoriesController', () => {
     });
 
     it('should pass all query parameters', async () => {
-      const queryWithFilters: CategoryQueryDto = { page: 2, limit: 5, parentId: 'parent-id', isActive: true, search: 'test' };
+      const queryWithFilters: CategoryQueryDto = {
+        page: 2,
+        limit: 5,
+        parentId: 'parent-id',
+        isActive: true,
+        search: 'test',
+      };
       categoriesService.findAll.mockResolvedValue(mockPaginatedResponse);
 
       await controller.findAll(queryWithFilters);
@@ -94,7 +109,11 @@ describe('CategoriesController', () => {
 
   describe('getTree', () => {
     it('should return category tree', async () => {
-      const tree = [createTestCategory({ children: [createTestCategory({ id: 'child-1' })] })];
+      const tree = [
+        createTestCategory({
+          children: [createTestCategory({ id: 'child-1' })],
+        }),
+      ];
       categoriesService.getTree.mockResolvedValue(tree);
 
       const result = await controller.getTree();
@@ -115,9 +134,13 @@ describe('CategoriesController', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      categoriesService.findOne.mockRejectedValue(new NotFoundException('دسته‌بندی یافت نشد'));
+      categoriesService.findOne.mockRejectedValue(
+        new NotFoundException('دسته‌بندی یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -127,14 +150,20 @@ describe('CategoriesController', () => {
 
       const result = await controller.findOneBySlug(mockCategory.slug);
 
-      expect(categoriesService.findOneBySlug).toHaveBeenCalledWith(mockCategory.slug);
+      expect(categoriesService.findOneBySlug).toHaveBeenCalledWith(
+        mockCategory.slug,
+      );
       expect(result).toEqual(mockCategory);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      categoriesService.findOneBySlug.mockRejectedValue(new NotFoundException('دسته‌بندی یافت نشد'));
+      categoriesService.findOneBySlug.mockRejectedValue(
+        new NotFoundException('دسته‌بندی یافت نشد'),
+      );
 
-      await expect(controller.findOneBySlug('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOneBySlug('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -150,14 +179,21 @@ describe('CategoriesController', () => {
 
       const result = await controller.update(mockCategory.id, updateDto);
 
-      expect(categoriesService.update).toHaveBeenCalledWith(mockCategory.id, updateDto);
+      expect(categoriesService.update).toHaveBeenCalledWith(
+        mockCategory.id,
+        updateDto,
+      );
       expect(result).toEqual(updatedCategory);
     });
 
     it('should throw NotFoundException if category not found', async () => {
-      categoriesService.update.mockRejectedValue(new NotFoundException('دسته‌بندی یافت نشد'));
+      categoriesService.update.mockRejectedValue(
+        new NotFoundException('دسته‌بندی یافت نشد'),
+      );
 
-      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -172,15 +208,23 @@ describe('CategoriesController', () => {
     });
 
     it('should throw NotFoundException if category not found', async () => {
-      categoriesService.remove.mockRejectedValue(new NotFoundException('دسته‌بندی یافت نشد'));
+      categoriesService.remove.mockRejectedValue(
+        new NotFoundException('دسته‌بندی یافت نشد'),
+      );
 
-      await expect(controller.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if category has children', async () => {
-      categoriesService.remove.mockRejectedValue(new BadRequestException('دسته‌بندی دارای زیرمجموعه است'));
+      categoriesService.remove.mockRejectedValue(
+        new BadRequestException('دسته‌بندی دارای زیرمجموعه است'),
+      );
 
-      await expect(controller.remove(mockCategory.id)).rejects.toThrow(BadRequestException);
+      await expect(controller.remove(mockCategory.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

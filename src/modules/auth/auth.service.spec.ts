@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException, ConflictException, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  ConflictException,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,14 +16,25 @@ import { User, UserRole } from '../users/users.entity';
 import { VerificationCode } from './verification-code.entity';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
 import { SendCodeDto, VerifyCodeDto } from './dto/phone-auth.dto';
-import { mockJwtService, mockSmsService, mockPermissionsService, createMockUserRepository, createMockVerificationCodeRepository } from '../../../test/utils/mock-helpers';
-import { createMockUser, createTestUser } from '../../../test/utils/test-factories';
+import {
+  mockJwtService,
+  mockSmsService,
+  mockPermissionsService,
+  createMockUserRepository,
+  createMockVerificationCodeRepository,
+} from '../../../test/utils/mock-helpers';
+import {
+  createMockUser,
+  createTestUser,
+} from '../../../test/utils/test-factories';
 
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: jest.Mocked<Partial<UsersService>>;
   let jwtService: jest.Mocked<JwtService>;
-  let verificationCodesRepository: jest.Mocked<Partial<Repository<VerificationCode>>>;
+  let verificationCodesRepository: jest.Mocked<
+    Partial<Repository<VerificationCode>>
+  >;
   let smsService: jest.Mocked<Partial<SmsService>>;
   let permissionsService: jest.Mocked<Partial<PermissionsService>>;
 
@@ -58,14 +74,17 @@ describe('AuthService', () => {
     jwtService = mockJwtService as any;
     verificationCodesRepository = createMockVerificationCodeRepository();
     smsService = mockSmsService as any;
-    permissionsService = mockPermissionsService as any;
+    permissionsService = mockPermissionsService;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: usersService },
         { provide: JwtService, useValue: jwtService },
-        { provide: getRepositoryToken(VerificationCode), useValue: verificationCodesRepository },
+        {
+          provide: getRepositoryToken(VerificationCode),
+          useValue: verificationCodesRepository,
+        },
         { provide: SmsService, useValue: smsService },
         { provide: PermissionsService, useValue: permissionsService },
       ],
@@ -77,7 +96,10 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('should register a new user successfully', async () => {
-      const newUser = createTestUser({ email: registerDto.email, phone: registerDto.phone });
+      const newUser = createTestUser({
+        email: registerDto.email,
+        phone: registerDto.phone,
+      });
       usersService.findByEmail.mockResolvedValue(null);
       usersService.create.mockResolvedValue(newUser);
       jwtService.sign.mockReturnValue('mock-access-token');
@@ -103,7 +125,9 @@ describe('AuthService', () => {
     it('should throw ConflictException if email already exists', async () => {
       usersService.findByEmail.mockResolvedValue(mockUser);
 
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
+      await expect(service.register(registerDto)).rejects.toThrow(
+        ConflictException,
+      );
       expect(usersService.findByEmail).toHaveBeenCalledWith(registerDto.email);
       expect(usersService.create).not.toHaveBeenCalled();
     });
@@ -124,13 +148,24 @@ describe('AuthService', () => {
 
   describe('validateUserByPhone', () => {
     it('should return user if credentials are valid', async () => {
-      const userWithPassword = { ...mockUser, password: '$2b$10$hashedpassword', validatePassword: jest.fn().mockResolvedValue(true) };
-      usersService.findByPhoneWithPassword.mockResolvedValue(userWithPassword as any);
+      const userWithPassword = {
+        ...mockUser,
+        password: '$2b$10$hashedpassword',
+        validatePassword: jest.fn().mockResolvedValue(true),
+      };
+      usersService.findByPhoneWithPassword.mockResolvedValue(userWithPassword);
 
-      const result = await service.validateUserByPhone('09123456789', 'password123');
+      const result = await service.validateUserByPhone(
+        '09123456789',
+        'password123',
+      );
 
-      expect(usersService.findByPhoneWithPassword).toHaveBeenCalledWith('09123456789');
-      expect(userWithPassword.validatePassword).toHaveBeenCalledWith('password123');
+      expect(usersService.findByPhoneWithPassword).toHaveBeenCalledWith(
+        '09123456789',
+      );
+      expect(userWithPassword.validatePassword).toHaveBeenCalledWith(
+        'password123',
+      );
       expect(result).toBeDefined();
       expect(result.password).toBeUndefined();
     });
@@ -138,21 +173,36 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       usersService.findByPhoneWithPassword.mockResolvedValue(null);
 
-      await expect(service.validateUserByPhone('09123456789', 'password123')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.validateUserByPhone('09123456789', 'password123'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
-      const userWithPassword = { ...mockUser, password: '$2b$10$hashedpassword', validatePassword: jest.fn().mockResolvedValue(false) };
-      usersService.findByPhoneWithPassword.mockResolvedValue(userWithPassword as any);
+      const userWithPassword = {
+        ...mockUser,
+        password: '$2b$10$hashedpassword',
+        validatePassword: jest.fn().mockResolvedValue(false),
+      };
+      usersService.findByPhoneWithPassword.mockResolvedValue(userWithPassword);
 
-      await expect(service.validateUserByPhone('09123456789', 'wrongpassword')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.validateUserByPhone('09123456789', 'wrongpassword'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException if user is inactive', async () => {
-      const inactiveUser = { ...mockUser, isActive: false, password: '$2b$10$hashedpassword', validatePassword: jest.fn().mockResolvedValue(true) };
-      usersService.findByPhoneWithPassword.mockResolvedValue(inactiveUser as any);
+      const inactiveUser = {
+        ...mockUser,
+        isActive: false,
+        password: '$2b$10$hashedpassword',
+        validatePassword: jest.fn().mockResolvedValue(true),
+      };
+      usersService.findByPhoneWithPassword.mockResolvedValue(inactiveUser);
 
-      await expect(service.validateUserByPhone('09123456789', 'password123')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.validateUserByPhone('09123456789', 'password123'),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -178,23 +228,37 @@ describe('AuthService', () => {
 
       const result = await service.sendCode(sendCodeDto);
 
-      expect(verificationCodesRepository.findOne).toHaveBeenCalledWith({ where: { phone: sendCodeDto.phone } });
+      expect(verificationCodesRepository.findOne).toHaveBeenCalledWith({
+        where: { phone: sendCodeDto.phone },
+      });
       expect(verificationCodesRepository.save).toHaveBeenCalled();
-      expect(smsService.sendCode).toHaveBeenCalledWith(sendCodeDto.phone, expect.any(String));
+      expect(smsService.sendCode).toHaveBeenCalledWith(
+        sendCodeDto.phone,
+        expect.any(String),
+      );
       expect(result).toEqual({ message: 'کد تایید ارسال شد' });
     });
 
     it('should throw HttpException if resend cooldown not elapsed', async () => {
       const existingCode = { phone: sendCodeDto.phone, createdAt: new Date() };
-      verificationCodesRepository.findOne.mockResolvedValue(existingCode as any);
+      verificationCodesRepository.findOne.mockResolvedValue(
+        existingCode as any,
+      );
 
-      await expect(service.sendCode(sendCodeDto)).rejects.toThrow(HttpException);
-      await expect(service.sendCode(sendCodeDto)).rejects.toThrow('برای ارسال مجدد کد کمی صبر کنید');
+      await expect(service.sendCode(sendCodeDto)).rejects.toThrow(
+        HttpException,
+      );
+      await expect(service.sendCode(sendCodeDto)).rejects.toThrow(
+        'برای ارسال مجدد کد کمی صبر کنید',
+      );
       expect(verificationCodesRepository.save).not.toHaveBeenCalled();
     });
 
     it('should remove existing code if cooldown elapsed', async () => {
-      const oldCode = { phone: sendCodeDto.phone, createdAt: new Date(Date.now() - 120000) };
+      const oldCode = {
+        phone: sendCodeDto.phone,
+        createdAt: new Date(Date.now() - 120000),
+      };
       verificationCodesRepository.findOne.mockResolvedValue(oldCode as any);
       verificationCodesRepository.remove.mockResolvedValue(undefined);
       verificationCodesRepository.save.mockImplementation(async (code) => code);
@@ -209,8 +273,14 @@ describe('AuthService', () => {
 
   describe('verifyCode', () => {
     it('should verify code and return token for existing user', async () => {
-      const verificationCode = { phone: verifyCodeDto.phone, code: verifyCodeDto.code, expiresAt: new Date(Date.now() + 300000) };
-      verificationCodesRepository.findOne.mockResolvedValue(verificationCode as any);
+      const verificationCode = {
+        phone: verifyCodeDto.phone,
+        code: verifyCodeDto.code,
+        expiresAt: new Date(Date.now() + 300000),
+      };
+      verificationCodesRepository.findOne.mockResolvedValue(
+        verificationCode as any,
+      );
       verificationCodesRepository.remove.mockResolvedValue(undefined);
       usersService.findByPhone.mockResolvedValue(mockUser);
       usersService.findById.mockResolvedValue(mockUser);
@@ -219,9 +289,15 @@ describe('AuthService', () => {
 
       const result = await service.verifyCode(verifyCodeDto);
 
-      expect(verificationCodesRepository.findOne).toHaveBeenCalledWith({ where: { phone: verifyCodeDto.phone } });
-      expect(verificationCodesRepository.remove).toHaveBeenCalledWith(verificationCode);
-      expect(usersService.findByPhone).toHaveBeenCalledWith(verifyCodeDto.phone);
+      expect(verificationCodesRepository.findOne).toHaveBeenCalledWith({
+        where: { phone: verifyCodeDto.phone },
+      });
+      expect(verificationCodesRepository.remove).toHaveBeenCalledWith(
+        verificationCode,
+      );
+      expect(usersService.findByPhone).toHaveBeenCalledWith(
+        verifyCodeDto.phone,
+      );
       expect(result).toHaveProperty('access_token');
       expect(result.user.phone).toBe(verifyCodeDto.phone);
     });
@@ -229,31 +305,57 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException if verification code not found', async () => {
       verificationCodesRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(UnauthorizedException);
-      expect(verificationCodesRepository.findOne).toHaveBeenCalledWith({ where: { phone: verifyCodeDto.phone } });
+      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(verificationCodesRepository.findOne).toHaveBeenCalledWith({
+        where: { phone: verifyCodeDto.phone },
+      });
     });
 
     it('should throw UnauthorizedException if code expired', async () => {
-      const expiredCode = { phone: verifyCodeDto.phone, code: verifyCodeDto.code, expiresAt: new Date(Date.now() - 1000) };
+      const expiredCode = {
+        phone: verifyCodeDto.phone,
+        code: verifyCodeDto.code,
+        expiresAt: new Date(Date.now() - 1000),
+      };
       verificationCodesRepository.findOne.mockResolvedValue(expiredCode as any);
       verificationCodesRepository.remove.mockResolvedValue(undefined);
 
-      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(UnauthorizedException);
-      expect(verificationCodesRepository.remove).toHaveBeenCalledWith(expiredCode);
+      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      expect(verificationCodesRepository.remove).toHaveBeenCalledWith(
+        expiredCode,
+      );
     });
 
     it('should throw UnauthorizedException if code is incorrect', async () => {
-      const verificationCode = { phone: verifyCodeDto.phone, code: '654321', expiresAt: new Date(Date.now() + 300000) };
-      verificationCodesRepository.findOne.mockResolvedValue(verificationCode as any);
+      const verificationCode = {
+        phone: verifyCodeDto.phone,
+        code: '654321',
+        expiresAt: new Date(Date.now() + 300000),
+      };
+      verificationCodesRepository.findOne.mockResolvedValue(
+        verificationCode as any,
+      );
 
-      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(verificationCodesRepository.remove).not.toHaveBeenCalled();
     });
 
     it('should create new user if phone not registered', async () => {
-      const verificationCode = { phone: verifyCodeDto.phone, code: verifyCodeDto.code, expiresAt: new Date(Date.now() + 300000) };
+      const verificationCode = {
+        phone: verifyCodeDto.phone,
+        code: verifyCodeDto.code,
+        expiresAt: new Date(Date.now() + 300000),
+      };
       const newUser = createTestUser({ phone: verifyCodeDto.phone });
-      verificationCodesRepository.findOne.mockResolvedValue(verificationCode as any);
+      verificationCodesRepository.findOne.mockResolvedValue(
+        verificationCode as any,
+      );
       verificationCodesRepository.remove.mockResolvedValue(undefined);
       usersService.findByPhone.mockResolvedValue(null);
       usersService.create.mockResolvedValue(newUser);
@@ -264,20 +366,34 @@ describe('AuthService', () => {
 
       const result = await service.verifyCode(verifyCodeDto);
 
-      expect(usersService.findByPhone).toHaveBeenCalledWith(verifyCodeDto.phone);
+      expect(usersService.findByPhone).toHaveBeenCalledWith(
+        verifyCodeDto.phone,
+      );
       expect(usersService.create).toHaveBeenCalled();
       expect(usersService.markPasswordNotSet).toHaveBeenCalledWith(newUser.id);
       expect(result).toHaveProperty('access_token');
     });
 
     it('should throw UnauthorizedException if new user is inactive', async () => {
-      const verificationCode = { phone: verifyCodeDto.phone, code: verifyCodeDto.code, expiresAt: new Date(Date.now() + 300000) };
-      const inactiveUser = { ...mockUser, isActive: false, phone: verifyCodeDto.phone };
-      verificationCodesRepository.findOne.mockResolvedValue(verificationCode as any);
+      const verificationCode = {
+        phone: verifyCodeDto.phone,
+        code: verifyCodeDto.code,
+        expiresAt: new Date(Date.now() + 300000),
+      };
+      const inactiveUser = {
+        ...mockUser,
+        isActive: false,
+        phone: verifyCodeDto.phone,
+      };
+      verificationCodesRepository.findOne.mockResolvedValue(
+        verificationCode as any,
+      );
       verificationCodesRepository.remove.mockResolvedValue(undefined);
       usersService.findByPhone.mockResolvedValue(inactiveUser);
 
-      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyCode(verifyCodeDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -289,11 +405,13 @@ describe('AuthService', () => {
 
       const result = await service.generateToken(userWithPermissions);
 
-      expect(jwtService.sign).toHaveBeenCalledWith(expect.objectContaining({
-        sub: userWithPermissions.id,
-        email: userWithPermissions.email,
-        role: userWithPermissions.role,
-      }));
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sub: userWithPermissions.id,
+          email: userWithPermissions.email,
+          role: userWithPermissions.role,
+        }),
+      );
       expect(result).toHaveProperty('access_token');
       expect(result.user).toMatchObject({
         id: userWithPermissions.id,
@@ -308,7 +426,9 @@ describe('AuthService', () => {
     it('should include user permissions and role permissions', async () => {
       const userPerms = [{ permission: { key: 'custom:perm' } }];
       const userWithPerms = { ...mockUser, permissions: userPerms };
-      permissionsService.getRolePermissions.mockResolvedValue({ customer: ['orders:read'] });
+      permissionsService.getRolePermissions.mockResolvedValue({
+        customer: ['orders:read'],
+      });
       jwtService.sign.mockReturnValue('mock-access-token');
 
       const result = await service.generateToken(userWithPerms);

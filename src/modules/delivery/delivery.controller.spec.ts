@@ -3,7 +3,10 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DeliveryController } from './delivery.controller';
 import { DeliveryService } from './delivery.service';
 import { DeliveryMethod } from './delivery-method.entity';
-import { CreateDeliveryMethodDto, UpdateDeliveryMethodDto } from './dto/delivery-method.dto';
+import {
+  CreateDeliveryMethodDto,
+  UpdateDeliveryMethodDto,
+} from './dto/delivery-method.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { createTestDeliveryMethod } from '../../../test/utils/test-factories';
 
@@ -13,7 +16,10 @@ describe('DeliveryController', () => {
 
   const mockDeliveryMethod = createTestDeliveryMethod();
   const mockPaginatedResponse: PaginatedResponse<DeliveryMethod> = {
-    data: [mockDeliveryMethod, createTestDeliveryMethod({ name: 'Standard', price: 15000 })],
+    data: [
+      mockDeliveryMethod,
+      createTestDeliveryMethod({ name: 'Standard', price: 15000 }),
+    ],
     total: 2,
     page: 1,
     limit: 10,
@@ -34,9 +40,7 @@ describe('DeliveryController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [DeliveryController],
-      providers: [
-        { provide: DeliveryService, useValue: deliveryService },
-      ],
+      providers: [{ provide: DeliveryService, useValue: deliveryService }],
     }).compile();
 
     controller = module.get<DeliveryController>(DeliveryController);
@@ -72,7 +76,10 @@ describe('DeliveryController', () => {
 
       const result = await controller.findAll({ page: 1, limit: 10 });
 
-      expect(deliveryService.findAll).toHaveBeenCalledWith({ page: 1, limit: 10 });
+      expect(deliveryService.findAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+      });
       expect(result).toEqual(mockPaginatedResponse);
     });
   });
@@ -83,14 +90,20 @@ describe('DeliveryController', () => {
 
       const result = await controller.findOne(mockDeliveryMethod.id);
 
-      expect(deliveryService.findOne).toHaveBeenCalledWith(mockDeliveryMethod.id);
+      expect(deliveryService.findOne).toHaveBeenCalledWith(
+        mockDeliveryMethod.id,
+      );
       expect(result).toEqual(mockDeliveryMethod);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      deliveryService.findOne.mockRejectedValue(new NotFoundException('روش ارسال یافت نشد'));
+      deliveryService.findOne.mockRejectedValue(
+        new NotFoundException('روش ارسال یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -106,14 +119,21 @@ describe('DeliveryController', () => {
 
       const result = await controller.update(mockDeliveryMethod.id, updateDto);
 
-      expect(deliveryService.update).toHaveBeenCalledWith(mockDeliveryMethod.id, updateDto);
+      expect(deliveryService.update).toHaveBeenCalledWith(
+        mockDeliveryMethod.id,
+        updateDto,
+      );
       expect(result).toEqual(updatedMethod);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      deliveryService.update.mockRejectedValue(new NotFoundException('روش ارسال یافت نشد'));
+      deliveryService.update.mockRejectedValue(
+        new NotFoundException('روش ارسال یافت نشد'),
+      );
 
-      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -123,37 +143,62 @@ describe('DeliveryController', () => {
 
       const result = await controller.remove(mockDeliveryMethod.id);
 
-      expect(deliveryService.remove).toHaveBeenCalledWith(mockDeliveryMethod.id);
+      expect(deliveryService.remove).toHaveBeenCalledWith(
+        mockDeliveryMethod.id,
+      );
       expect(result).toEqual({ message: 'روش ارسال با موفقیت حذف شد' });
     });
 
     it('should throw NotFoundException if not found', async () => {
-      deliveryService.remove.mockRejectedValue(new NotFoundException('روش ارسال یافت نشد'));
+      deliveryService.remove.mockRejectedValue(
+        new NotFoundException('روش ارسال یافت نشد'),
+      );
 
-      await expect(controller.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if method has orders', async () => {
-      deliveryService.remove.mockRejectedValue(new BadRequestException('این روش ارسال دارای سفارش است'));
+      deliveryService.remove.mockRejectedValue(
+        new BadRequestException('این روش ارسال دارای سفارش است'),
+      );
 
-      await expect(controller.remove(mockDeliveryMethod.id)).rejects.toThrow(BadRequestException);
+      await expect(controller.remove(mockDeliveryMethod.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('calculateShipping', () => {
     it('should calculate shipping cost', async () => {
-      deliveryService.calculateShipping.mockResolvedValue({ shippingCost: 15000, isFree: false });
+      deliveryService.calculateShipping.mockResolvedValue({
+        shippingCost: 15000,
+        isFree: false,
+      });
 
-      const result = await controller.calculateShipping(mockDeliveryMethod.id, 300000);
+      const result = await controller.calculateShipping(
+        mockDeliveryMethod.id,
+        300000,
+      );
 
-      expect(deliveryService.calculateShipping).toHaveBeenCalledWith(mockDeliveryMethod.id, 300000);
+      expect(deliveryService.calculateShipping).toHaveBeenCalledWith(
+        mockDeliveryMethod.id,
+        300000,
+      );
       expect(result).toEqual({ shippingCost: 15000, isFree: false });
     });
 
     it('should return free shipping if order amount exceeds threshold', async () => {
-      deliveryService.calculateShipping.mockResolvedValue({ shippingCost: 0, isFree: true });
+      deliveryService.calculateShipping.mockResolvedValue({
+        shippingCost: 0,
+        isFree: true,
+      });
 
-      const result = await controller.calculateShipping(mockDeliveryMethod.id, 600000);
+      const result = await controller.calculateShipping(
+        mockDeliveryMethod.id,
+        600000,
+      );
 
       expect(result).toEqual({ shippingCost: 0, isFree: true });
     });

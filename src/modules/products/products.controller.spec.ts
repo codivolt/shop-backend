@@ -1,12 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { Product } from './product.entity';
 import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
-import { createTestProduct, createTestCategory, createTestBrand } from '../../../test/utils/test-factories';
+import {
+  createTestProduct,
+  createTestCategory,
+  createTestBrand,
+} from '../../../test/utils/test-factories';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
@@ -14,8 +22,17 @@ describe('ProductsController', () => {
 
   const mockCategory = createTestCategory();
   const mockBrand = createTestBrand();
-  const mockProduct = createTestProduct({ categoryId: mockCategory.id, brandId: mockBrand.id });
-  const mockProductWithRelations = { ...mockProduct, category: mockCategory, brand: mockBrand, images: [], attributes: [] };
+  const mockProduct = createTestProduct({
+    categoryId: mockCategory.id,
+    brandId: mockBrand.id,
+  });
+  const mockProductWithRelations = {
+    ...mockProduct,
+    category: mockCategory,
+    brand: mockBrand,
+    images: [],
+    attributes: [],
+  };
   const mockPaginatedResponse: PaginatedResponse<Product> = {
     data: [mockProduct, createTestProduct({ name: 'Product 2' })],
     total: 2,
@@ -40,9 +57,7 @@ describe('ProductsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductsController],
-      providers: [
-        { provide: ProductsService, useValue: productsService },
-      ],
+      providers: [{ provide: ProductsService, useValue: productsService }],
     }).compile();
 
     controller = module.get<ProductsController>(ProductsController);
@@ -83,15 +98,23 @@ describe('ProductsController', () => {
     });
 
     it('should throw NotFoundException if category not found', async () => {
-      productsService.create.mockRejectedValue(new NotFoundException('دسته‌بندی یافت نشد'));
+      productsService.create.mockRejectedValue(
+        new NotFoundException('دسته‌بندی یافت نشد'),
+      );
 
-      await expect(controller.create(createDto)).rejects.toThrow(NotFoundException);
+      await expect(controller.create(createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if slug exists', async () => {
-      productsService.create.mockRejectedValue(new ConflictException('اسلاگ تکراری است'));
+      productsService.create.mockRejectedValue(
+        new ConflictException('اسلاگ تکراری است'),
+      );
 
-      await expect(controller.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(controller.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -140,9 +163,13 @@ describe('ProductsController', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      productsService.findOne.mockRejectedValue(new NotFoundException('محصول یافت نشد'));
+      productsService.findOne.mockRejectedValue(
+        new NotFoundException('محصول یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -152,14 +179,20 @@ describe('ProductsController', () => {
 
       const result = await controller.findOneBySlug(mockProduct.slug);
 
-      expect(productsService.findOneBySlug).toHaveBeenCalledWith(mockProduct.slug);
+      expect(productsService.findOneBySlug).toHaveBeenCalledWith(
+        mockProduct.slug,
+      );
       expect(result).toEqual(mockProductWithRelations);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      productsService.findOneBySlug.mockRejectedValue(new NotFoundException('محصول یافت نشد'));
+      productsService.findOneBySlug.mockRejectedValue(
+        new NotFoundException('محصول یافت نشد'),
+      );
 
-      await expect(controller.findOneBySlug('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOneBySlug('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -175,14 +208,21 @@ describe('ProductsController', () => {
 
       const result = await controller.update(mockProduct.id, updateDto);
 
-      expect(productsService.update).toHaveBeenCalledWith(mockProduct.id, updateDto);
+      expect(productsService.update).toHaveBeenCalledWith(
+        mockProduct.id,
+        updateDto,
+      );
       expect(result).toEqual(updatedProduct);
     });
 
     it('should throw NotFoundException if product not found', async () => {
-      productsService.update.mockRejectedValue(new NotFoundException('محصول یافت نشد'));
+      productsService.update.mockRejectedValue(
+        new NotFoundException('محصول یافت نشد'),
+      );
 
-      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -197,9 +237,13 @@ describe('ProductsController', () => {
     });
 
     it('should throw NotFoundException if product not found', async () => {
-      productsService.remove.mockRejectedValue(new NotFoundException('محصول یافت نشد'));
+      productsService.remove.mockRejectedValue(
+        new NotFoundException('محصول یافت نشد'),
+      );
 
-      await expect(controller.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -210,7 +254,10 @@ describe('ProductsController', () => {
 
       const result = await controller.updateInventory(mockProduct.id, 75);
 
-      expect(productsService.updateInventory).toHaveBeenCalledWith(mockProduct.id, 75);
+      expect(productsService.updateInventory).toHaveBeenCalledWith(
+        mockProduct.id,
+        75,
+      );
       expect(result).toEqual(updatedProduct);
     });
   });

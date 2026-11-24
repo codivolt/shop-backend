@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { OrdersService } from './orders.service';
@@ -13,7 +17,13 @@ import { CreateOrderDto, UpdateOrderStatusDto } from './dto/order.dto';
 import { OrderQueryDto } from './dto/order.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { createMockRepository } from '../../../test/utils/mock-helpers';
-import { createTestOrder, createTestOrderItem, createTestUser, createTestProduct, createTestDeliveryMethod } from '../../../test/utils/test-factories';
+import {
+  createTestOrder,
+  createTestOrderItem,
+  createTestUser,
+  createTestProduct,
+  createTestDeliveryMethod,
+} from '../../../test/utils/test-factories';
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -22,13 +32,21 @@ describe('OrdersService', () => {
   let userRepository: jest.Mocked<Partial<Repository<User>>>;
   let productRepository: jest.Mocked<Partial<Repository<Product>>>;
   let cartItemRepository: jest.Mocked<Partial<Repository<CartItem>>>;
-  let deliveryMethodRepository: jest.Mocked<Partial<Repository<DeliveryMethod>>>;
+  let deliveryMethodRepository: jest.Mocked<
+    Partial<Repository<DeliveryMethod>>
+  >;
 
   const mockUser = createTestUser();
   const mockProduct = createTestProduct({ inventoryQuantity: 10 });
   const mockDeliveryMethod = createTestDeliveryMethod();
-  const mockOrder = createTestOrder({ userId: mockUser.id, deliveryMethodId: mockDeliveryMethod.id });
-  const mockOrderItem = createTestOrderItem({ orderId: mockOrder.id, productId: mockProduct.id });
+  const mockOrder = createTestOrder({
+    userId: mockUser.id,
+    deliveryMethodId: mockDeliveryMethod.id,
+  });
+  const mockOrderItem = createTestOrderItem({
+    orderId: mockOrder.id,
+    productId: mockProduct.id,
+  });
 
   beforeEach(async () => {
     orderRepository = createMockRepository<Order>();
@@ -54,11 +72,17 @@ describe('OrdersService', () => {
       providers: [
         OrdersService,
         { provide: getRepositoryToken(Order), useValue: orderRepository },
-        { provide: getRepositoryToken(OrderItem), useValue: orderItemRepository },
+        {
+          provide: getRepositoryToken(OrderItem),
+          useValue: orderItemRepository,
+        },
         { provide: getRepositoryToken(User), useValue: userRepository },
         { provide: getRepositoryToken(Product), useValue: productRepository },
         { provide: getRepositoryToken(CartItem), useValue: cartItemRepository },
-        { provide: getRepositoryToken(DeliveryMethod), useValue: deliveryMethodRepository },
+        {
+          provide: getRepositoryToken(DeliveryMethod),
+          useValue: deliveryMethodRepository,
+        },
       ],
     }).compile();
 
@@ -68,9 +92,7 @@ describe('OrdersService', () => {
 
   describe('create', () => {
     const createDto: CreateOrderDto = {
-      items: [
-        { productId: mockProduct.id, quantity: 2 },
-      ],
+      items: [{ productId: mockProduct.id, quantity: 2 }],
       shippingAddress: {
         firstName: 'Test',
         lastName: 'User',
@@ -96,7 +118,13 @@ describe('OrdersService', () => {
 
     it('should create order from cart items', async () => {
       const cartItems = [
-        { id: 'cart-1', userId: mockUser.id, productId: mockProduct.id, quantity: 2, product: mockProduct },
+        {
+          id: 'cart-1',
+          userId: mockUser.id,
+          productId: mockProduct.id,
+          quantity: 2,
+          product: mockProduct,
+        },
       ];
       userRepository.findOne.mockResolvedValue(mockUser);
       productRepository.findOne.mockResolvedValue(mockProduct);
@@ -105,12 +133,19 @@ describe('OrdersService', () => {
       orderRepository.save.mockResolvedValue(mockOrder as any);
       orderItemRepository.save.mockResolvedValue([mockOrderItem] as any);
       cartItemRepository.delete.mockResolvedValue({ affected: 1, raw: {} });
-      productRepository.save.mockResolvedValue({ ...mockProduct, inventoryQuantity: 8 } as any);
+      productRepository.save.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 8,
+      } as any);
 
       const result = await service.create(mockUser.id, createDto);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: mockUser.id } });
-      expect(productRepository.findOne).toHaveBeenCalledWith({ where: { id: mockProduct.id } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockUser.id },
+      });
+      expect(productRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockProduct.id },
+      });
       expect(orderRepository.save).toHaveBeenCalled();
       expect(orderItemRepository.save).toHaveBeenCalled();
       expect(cartItemRepository.delete).toHaveBeenCalled();
@@ -120,14 +155,18 @@ describe('OrdersService', () => {
     it('should throw NotFoundException if user not found', async () => {
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(mockUser.id, createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(mockUser.id, createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if product not found', async () => {
       userRepository.findOne.mockResolvedValue(mockUser);
       productRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(mockUser.id, createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(mockUser.id, createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if insufficient inventory', async () => {
@@ -135,7 +174,9 @@ describe('OrdersService', () => {
       userRepository.findOne.mockResolvedValue(mockUser);
       productRepository.findOne.mockResolvedValue(lowStockProduct);
 
-      await expect(service.create(mockUser.id, createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(mockUser.id, createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -155,11 +196,19 @@ describe('OrdersService', () => {
     it('should filter by status', async () => {
       orderRepository.findAndCount.mockResolvedValue([[mockOrder], 1]);
 
-      await service.findAll(mockUser.id, { ...query, status: OrderStatus.PENDING });
+      await service.findAll(mockUser.id, {
+        ...query,
+        status: OrderStatus.PENDING,
+      });
 
-      expect(orderRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ status: OrderStatus.PENDING, userId: mockUser.id }),
-      }));
+      expect(orderRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: OrderStatus.PENDING,
+            userId: mockUser.id,
+          }),
+        }),
+      );
     });
   });
 
@@ -180,7 +229,9 @@ describe('OrdersService', () => {
     it('should throw NotFoundException if not found', async () => {
       orderRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent', mockUser.id)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent', mockUser.id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -201,9 +252,11 @@ describe('OrdersService', () => {
 
       await service.findAllAdmin({ ...query, userId: mockUser.id });
 
-      expect(orderRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ userId: mockUser.id }),
-      }));
+      expect(orderRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ userId: mockUser.id }),
+        }),
+      );
     });
   });
 
@@ -219,7 +272,9 @@ describe('OrdersService', () => {
 
       const result = await service.updateStatus(mockOrder.id, updateStatusDto);
 
-      expect(orderRepository.findOne).toHaveBeenCalledWith({ where: { id: mockOrder.id } });
+      expect(orderRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockOrder.id },
+      });
       expect(orderRepository.merge).toHaveBeenCalled();
       expect(result.status).toBe(OrderStatus.CONFIRMED);
     });
@@ -227,7 +282,9 @@ describe('OrdersService', () => {
     it('should throw NotFoundException if order not found', async () => {
       orderRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.updateStatus('nonexistent', updateStatusDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateStatus('nonexistent', updateStatusDto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -235,9 +292,15 @@ describe('OrdersService', () => {
     it('should cancel pending order', async () => {
       const pendingOrder = { ...mockOrder, status: OrderStatus.PENDING };
       orderRepository.findOne.mockResolvedValue(pendingOrder);
-      orderRepository.save.mockResolvedValue({ ...pendingOrder, status: OrderStatus.CANCELLED } as any);
+      orderRepository.save.mockResolvedValue({
+        ...pendingOrder,
+        status: OrderStatus.CANCELLED,
+      } as any);
       orderItemRepository.find.mockResolvedValue([mockOrderItem]);
-      productRepository.save.mockResolvedValue({ ...mockProduct, inventoryQuantity: 12 } as any);
+      productRepository.save.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 12,
+      } as any);
 
       const result = await service.cancel(mockOrder.id, mockUser.id);
 
@@ -249,7 +312,9 @@ describe('OrdersService', () => {
       const deliveredOrder = { ...mockOrder, status: OrderStatus.DELIVERED };
       orderRepository.findOne.mockResolvedValue(deliveredOrder);
 
-      await expect(service.cancel(mockOrder.id, mockUser.id)).rejects.toThrow(BadRequestException);
+      await expect(service.cancel(mockOrder.id, mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

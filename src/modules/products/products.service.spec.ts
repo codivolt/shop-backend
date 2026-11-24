@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { ProductsService } from './products.service';
@@ -12,19 +16,28 @@ import { CreateProductDto, UpdateProductDto } from './dto/product.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { createMockRepository } from '../../../test/utils/mock-helpers';
-import { createTestProduct, createTestCategory, createTestBrand } from '../../../test/utils/test-factories';
+import {
+  createTestProduct,
+  createTestCategory,
+  createTestBrand,
+} from '../../../test/utils/test-factories';
 
 describe('ProductsService', () => {
   let service: ProductsService;
   let productRepository: jest.Mocked<Partial<Repository<Product>>>;
   let productImageRepository: jest.Mocked<Partial<Repository<ProductImage>>>;
-  let productAttributeRepository: jest.Mocked<Partial<Repository<ProductAttributeValue>>>;
+  let productAttributeRepository: jest.Mocked<
+    Partial<Repository<ProductAttributeValue>>
+  >;
   let categoryRepository: jest.Mocked<Partial<Repository<Category>>>;
   let brandRepository: jest.Mocked<Partial<Repository<Brand>>>;
 
   const mockCategory = createTestCategory();
   const mockBrand = createTestBrand();
-  const mockProduct = createTestProduct({ categoryId: mockCategory.id, brandId: mockBrand.id });
+  const mockProduct = createTestProduct({
+    categoryId: mockCategory.id,
+    brandId: mockBrand.id,
+  });
 
   beforeEach(async () => {
     productRepository = createMockRepository<Product>();
@@ -50,8 +63,14 @@ describe('ProductsService', () => {
       providers: [
         ProductsService,
         { provide: getRepositoryToken(Product), useValue: productRepository },
-        { provide: getRepositoryToken(ProductImage), useValue: productImageRepository },
-        { provide: getRepositoryToken(ProductAttributeValue), useValue: productAttributeRepository },
+        {
+          provide: getRepositoryToken(ProductImage),
+          useValue: productImageRepository,
+        },
+        {
+          provide: getRepositoryToken(ProductAttributeValue),
+          useValue: productAttributeRepository,
+        },
         { provide: getRepositoryToken(Category), useValue: categoryRepository },
         { provide: getRepositoryToken(Brand), useValue: brandRepository },
       ],
@@ -93,23 +112,33 @@ describe('ProductsService', () => {
 
       const result = await service.create(createDto);
 
-      expect(categoryRepository.findOne).toHaveBeenCalledWith({ where: { id: createDto.categoryId } });
-      expect(brandRepository.findOne).toHaveBeenCalledWith({ where: { id: createDto.brandId } });
+      expect(categoryRepository.findOne).toHaveBeenCalledWith({
+        where: { id: createDto.categoryId },
+      });
+      expect(brandRepository.findOne).toHaveBeenCalledWith({
+        where: { id: createDto.brandId },
+      });
       expect(productRepository.save).toHaveBeenCalled();
-      expect(result).toMatchObject(expect.objectContaining({ name: createDto.name, slug: createDto.slug }));
+      expect(result).toMatchObject(
+        expect.objectContaining({ name: createDto.name, slug: createDto.slug }),
+      );
     });
 
     it('should throw NotFoundException if category not found', async () => {
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if brand not found', async () => {
       categoryRepository.findOne.mockResolvedValue(mockCategory);
       brandRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if slug already exists', async () => {
@@ -117,7 +146,9 @@ describe('ProductsService', () => {
       brandRepository.findOne.mockResolvedValue(mockBrand);
       productRepository.findOne.mockResolvedValue(mockProduct);
 
-      await expect(service.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -126,7 +157,10 @@ describe('ProductsService', () => {
 
     it('should return paginated products', async () => {
       const products = [mockProduct, createTestProduct({ name: 'Product 2' })];
-      productRepository.findAndCount.mockResolvedValue([products, products.length]);
+      productRepository.findAndCount.mockResolvedValue([
+        products,
+        products.length,
+      ]);
 
       const result = await service.findAll(query);
 
@@ -139,9 +173,11 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, categoryId: mockCategory.id });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ categoryId: mockCategory.id }),
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ categoryId: mockCategory.id }),
+        }),
+      );
     });
 
     it('should filter by brandId', async () => {
@@ -149,9 +185,11 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, brandId: mockBrand.id });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ brandId: mockBrand.id }),
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ brandId: mockBrand.id }),
+        }),
+      );
     });
 
     it('should filter by isActive', async () => {
@@ -159,9 +197,11 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, isActive: true });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ isActive: true }),
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
     });
 
     it('should filter by inStock', async () => {
@@ -169,9 +209,11 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, inStock: true });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.anything(),
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.anything(),
+        }),
+      );
     });
 
     it('should filter by price range', async () => {
@@ -179,9 +221,11 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, minPrice: 50000, maxPrice: 200000 });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.anything(),
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.anything(),
+        }),
+      );
     });
 
     it('should search by term', async () => {
@@ -189,13 +233,15 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, search: 'test' });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.arrayContaining([
-          expect.objectContaining({ name: expect.anything() }),
-          expect.objectContaining({ slug: expect.anything() }),
-          expect.objectContaining({ description: expect.anything() }),
-        ]),
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.arrayContaining([
+            expect.objectContaining({ name: expect.anything() }),
+            expect.objectContaining({ slug: expect.anything() }),
+            expect.objectContaining({ description: expect.anything() }),
+          ]),
+        }),
+      );
     });
 
     it('should sort by price asc', async () => {
@@ -203,9 +249,11 @@ describe('ProductsService', () => {
 
       await service.findAll({ ...query, sortBy: 'price', sortOrder: 'ASC' });
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        order: { price: 'ASC' },
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order: { price: 'ASC' },
+        }),
+      );
     });
 
     it('should sort by createdAt desc by default', async () => {
@@ -213,15 +261,23 @@ describe('ProductsService', () => {
 
       await service.findAll(query);
 
-      expect(productRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        order: { createdAt: 'DESC' },
-      }));
+      expect(productRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          order: { createdAt: 'DESC' },
+        }),
+      );
     });
   });
 
   describe('findOne', () => {
     it('should return product by id with relations', async () => {
-      const productWithRelations = { ...mockProduct, category: mockCategory, brand: mockBrand, images: [], attributes: [] };
+      const productWithRelations = {
+        ...mockProduct,
+        category: mockCategory,
+        brand: mockBrand,
+        images: [],
+        attributes: [],
+      };
       productRepository.findOne.mockResolvedValue(productWithRelations);
 
       const result = await service.findOne(mockProduct.id);
@@ -234,7 +290,11 @@ describe('ProductsService', () => {
     });
 
     it('should return product by slug', async () => {
-      const productWithRelations = { ...mockProduct, category: mockCategory, brand: mockBrand };
+      const productWithRelations = {
+        ...mockProduct,
+        category: mockCategory,
+        brand: mockBrand,
+      };
       productRepository.findOne.mockResolvedValue(productWithRelations);
 
       const result = await service.findOneBySlug(mockProduct.slug);
@@ -248,7 +308,9 @@ describe('ProductsService', () => {
     it('should throw NotFoundException if not found', async () => {
       productRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -265,7 +327,9 @@ describe('ProductsService', () => {
 
       const result = await service.update(mockProduct.id, updateDto);
 
-      expect(productRepository.findOne).toHaveBeenCalledWith({ where: { id: mockProduct.id } });
+      expect(productRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockProduct.id },
+      });
       expect(productRepository.merge).toHaveBeenCalled();
       expect(result.name).toBe('Updated Product');
       expect(result.price).toBe(150000);
@@ -274,25 +338,40 @@ describe('ProductsService', () => {
     it('should throw NotFoundException if product not found', async () => {
       productRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should validate category if categoryId provided', async () => {
       const newCategory = createTestCategory({ id: 'new-cat-id' });
       productRepository.findOne.mockResolvedValue(mockProduct);
       categoryRepository.findOne.mockResolvedValue(newCategory);
-      productRepository.save.mockResolvedValue({ ...mockProduct, categoryId: 'new-cat-id' } as any);
+      productRepository.save.mockResolvedValue({
+        ...mockProduct,
+        categoryId: 'new-cat-id',
+      } as any);
 
-      await service.update(mockProduct.id, { ...updateDto, categoryId: 'new-cat-id' });
+      await service.update(mockProduct.id, {
+        ...updateDto,
+        categoryId: 'new-cat-id',
+      });
 
-      expect(categoryRepository.findOne).toHaveBeenCalledWith({ where: { id: 'new-cat-id' } });
+      expect(categoryRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'new-cat-id' },
+      });
     });
 
     it('should throw NotFoundException if new category not found', async () => {
       productRepository.findOne.mockResolvedValue(mockProduct);
       categoryRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update(mockProduct.id, { ...updateDto, categoryId: 'nonexistent' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update(mockProduct.id, {
+          ...updateDto,
+          categoryId: 'nonexistent',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -309,14 +388,19 @@ describe('ProductsService', () => {
     it('should throw NotFoundException if product not found', async () => {
       productRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('updateInventory', () => {
     it('should update inventory quantity', async () => {
       productRepository.findOne.mockResolvedValue(mockProduct);
-      productRepository.save.mockResolvedValue({ ...mockProduct, inventoryQuantity: 75 } as any);
+      productRepository.save.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 75,
+      } as any);
 
       const result = await service.updateInventory(mockProduct.id, 75);
 
@@ -326,14 +410,19 @@ describe('ProductsService', () => {
     it('should throw NotFoundException if product not found', async () => {
       productRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.updateInventory('nonexistent', 10)).rejects.toThrow(NotFoundException);
+      await expect(service.updateInventory('nonexistent', 10)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('decreaseInventory', () => {
     it('should decrease inventory and save', async () => {
       productRepository.findOne.mockResolvedValue(mockProduct);
-      productRepository.save.mockResolvedValue({ ...mockProduct, inventoryQuantity: 90 } as any);
+      productRepository.save.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 90,
+      } as any);
 
       const result = await service.decreaseInventory(mockProduct.id, 10);
 
@@ -341,9 +430,14 @@ describe('ProductsService', () => {
     });
 
     it('should throw BadRequestException if insufficient inventory', async () => {
-      productRepository.findOne.mockResolvedValue({ ...mockProduct, inventoryQuantity: 5 });
+      productRepository.findOne.mockResolvedValue({
+        ...mockProduct,
+        inventoryQuantity: 5,
+      });
 
-      await expect(service.decreaseInventory(mockProduct.id, 10)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.decreaseInventory(mockProduct.id, 10),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

@@ -4,7 +4,11 @@ import { CartController } from './cart.controller';
 import { CartService } from './cart.service';
 import { CartItem } from './cart-item.entity';
 import { AddToCartDto, UpdateCartDto } from './dto/cart.dto';
-import { createTestCartItem, createTestUser, createTestProduct } from '../../../test/utils/test-factories';
+import {
+  createTestCartItem,
+  createTestUser,
+  createTestProduct,
+} from '../../../test/utils/test-factories';
 
 describe('CartController', () => {
   let controller: CartController;
@@ -12,7 +16,11 @@ describe('CartController', () => {
 
   const mockUser = createTestUser();
   const mockProduct = createTestProduct();
-  const mockCartItem = createTestCartItem({ userId: mockUser.id, productId: mockProduct.id, quantity: 2 });
+  const mockCartItem = createTestCartItem({
+    userId: mockUser.id,
+    productId: mockProduct.id,
+    quantity: 2,
+  });
 
   beforeEach(async () => {
     cartService = {
@@ -26,9 +34,7 @@ describe('CartController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CartController],
-      providers: [
-        { provide: CartService, useValue: cartService },
-      ],
+      providers: [{ provide: CartService, useValue: cartService }],
     }).compile();
 
     controller = module.get<CartController>(CartController);
@@ -54,19 +60,30 @@ describe('CartController', () => {
     };
 
     it('should add item to cart', async () => {
-      const newCartItem = createTestCartItem({ userId: mockUser.id, productId: mockProduct.id, quantity: 1 });
+      const newCartItem = createTestCartItem({
+        userId: mockUser.id,
+        productId: mockProduct.id,
+        quantity: 1,
+      });
       cartService.addToCart.mockResolvedValue(newCartItem);
 
       const result = await controller.addToCart(addToCartDto, mockUser);
 
-      expect(cartService.addToCart).toHaveBeenCalledWith(mockUser.id, addToCartDto);
+      expect(cartService.addToCart).toHaveBeenCalledWith(
+        mockUser.id,
+        addToCartDto,
+      );
       expect(result).toEqual(newCartItem);
     });
 
     it('should throw NotFoundException if product not found', async () => {
-      cartService.addToCart.mockRejectedValue(new NotFoundException('محصول یافت نشد'));
+      cartService.addToCart.mockRejectedValue(
+        new NotFoundException('محصول یافت نشد'),
+      );
 
-      await expect(controller.addToCart(addToCartDto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.addToCart(addToCartDto, mockUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -79,16 +96,28 @@ describe('CartController', () => {
       const updatedCartItem = { ...mockCartItem, quantity: 5 };
       cartService.updateQuantity.mockResolvedValue(updatedCartItem);
 
-      const result = await controller.updateQuantity(mockCartItem.id, updateCartDto, mockUser);
+      const result = await controller.updateQuantity(
+        mockCartItem.id,
+        updateCartDto,
+        mockUser,
+      );
 
-      expect(cartService.updateQuantity).toHaveBeenCalledWith(mockUser.id, mockCartItem.id, updateCartDto);
+      expect(cartService.updateQuantity).toHaveBeenCalledWith(
+        mockUser.id,
+        mockCartItem.id,
+        updateCartDto,
+      );
       expect(result).toEqual(updatedCartItem);
     });
 
     it('should throw NotFoundException if cart item not found', async () => {
-      cartService.updateQuantity.mockRejectedValue(new NotFoundException('آیتم سبد خرید یافت نشد'));
+      cartService.updateQuantity.mockRejectedValue(
+        new NotFoundException('آیتم سبد خرید یافت نشد'),
+      );
 
-      await expect(controller.updateQuantity('nonexistent', updateCartDto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.updateQuantity('nonexistent', updateCartDto, mockUser),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -98,7 +127,10 @@ describe('CartController', () => {
 
       const result = await controller.removeFromCart(mockCartItem.id, mockUser);
 
-      expect(cartService.removeFromCart).toHaveBeenCalledWith(mockUser.id, mockCartItem.id);
+      expect(cartService.removeFromCart).toHaveBeenCalledWith(
+        mockUser.id,
+        mockCartItem.id,
+      );
       expect(result).toEqual({ message: 'آیتم از سبد خرید حذف شد' });
     });
   });

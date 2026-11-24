@@ -1,5 +1,12 @@
 import { setupE2E, teardownE2E, getTestRequest } from '../setup/e2e.setup';
-import { createTestUser, createTestAdmin, createTestProduct, createTestCategory, createTestBrand, createTestDeliveryMethod } from '../utils/test-factories';
+import {
+  createTestUser,
+  createTestAdmin,
+  createTestProduct,
+  createTestCategory,
+  createTestBrand,
+  createTestDeliveryMethod,
+} from '../utils/test-factories';
 
 let request: ReturnType<typeof getTestRequest>;
 let userToken: string;
@@ -44,11 +51,9 @@ describe('Orders E2E Tests', () => {
     it('should create order from cart', async () => {
       // First add item to cart (would need product)
       // In real test, we'd create product via admin API first
-      
+
       const orderDto = {
-        items: [
-          { productId: 'some-product-id', quantity: 1 },
-        ],
+        items: [{ productId: 'some-product-id', quantity: 1 }],
         shippingAddress: {
           firstName: 'Order',
           lastName: 'User',

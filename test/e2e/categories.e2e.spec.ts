@@ -108,7 +108,9 @@ describe('Categories E2E Tests', () => {
     it('should return category by id', async () => {
       if (!categoryId) return;
 
-      const response = await request.get(`/api/categories/${categoryId}`).expect(200);
+      const response = await request
+        .get(`/api/categories/${categoryId}`)
+        .expect(200);
 
       expect(response.body.id).toBe(categoryId);
       expect(response.body.name).toBe('E2E Test Category');
@@ -123,10 +125,14 @@ describe('Categories E2E Tests', () => {
     it('should return category by slug', async () => {
       if (!categoryId) return;
 
-      const category = await request.get(`/api/categories/${categoryId}`).expect(200);
+      const category = await request
+        .get(`/api/categories/${categoryId}`)
+        .expect(200);
       const slug = category.body.slug;
 
-      const response = await request.get(`/api/categories/slug/${slug}`).expect(200);
+      const response = await request
+        .get(`/api/categories/slug/${slug}`)
+        .expect(200);
 
       expect(response.body.slug).toBe(slug);
     });

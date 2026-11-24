@@ -106,8 +106,14 @@ describe('Auth E2E Tests', () => {
     });
 
     it('should reject rapid resend', async () => {
-      await request.post('/api/auth/send-code').send({ phone: '09128887766' }).expect(200);
-      await request.post('/api/auth/send-code').send({ phone: '09128887766' }).expect(429);
+      await request
+        .post('/api/auth/send-code')
+        .send({ phone: '09128887766' })
+        .expect(200);
+      await request
+        .post('/api/auth/send-code')
+        .send({ phone: '09128887766' })
+        .expect(429);
     });
   });
 
@@ -116,7 +122,7 @@ describe('Auth E2E Tests', () => {
       // We need to mock SMS or get the code from DB
       // For E2E, we'll test the flow with a mocked SMS service
       const phone = '09129990000';
-      
+
       // Send code (in test env, SMS is mocked)
       await request.post('/api/auth/send-code').send({ phone }).expect(200);
 

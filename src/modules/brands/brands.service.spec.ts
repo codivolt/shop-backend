@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BrandsService } from './brands.service';
@@ -52,7 +56,9 @@ describe('BrandsService', () => {
     it('should throw ConflictException if slug already exists', async () => {
       brandRepository.findOne.mockResolvedValue(mockBrand);
 
-      await expect(service.create({ ...createDto, slug: mockBrand.slug })).rejects.toThrow(ConflictException);
+      await expect(
+        service.create({ ...createDto, slug: mockBrand.slug }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -74,9 +80,11 @@ describe('BrandsService', () => {
 
       const result = await service.findAll({ ...query, isActive: true });
 
-      expect(brandRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.objectContaining({ isActive: true }),
-      }));
+      expect(brandRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ isActive: true }),
+        }),
+      );
     });
 
     it('should search by name', async () => {
@@ -84,12 +92,14 @@ describe('BrandsService', () => {
 
       const result = await service.findAll({ ...query, search: 'Brand' });
 
-      expect(brandRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: expect.arrayContaining([
-          expect.objectContaining({ name: expect.anything() }),
-          expect.objectContaining({ slug: expect.anything() }),
-        ]),
-      }));
+      expect(brandRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.arrayContaining([
+            expect.objectContaining({ name: expect.anything() }),
+            expect.objectContaining({ slug: expect.anything() }),
+          ]),
+        }),
+      );
     });
   });
 
@@ -107,13 +117,17 @@ describe('BrandsService', () => {
 
       const result = await service.findOneBySlug(mockBrand.slug);
 
-      expect(brandRepository.findOne).toHaveBeenCalledWith({ where: { slug: mockBrand.slug } });
+      expect(brandRepository.findOne).toHaveBeenCalledWith({
+        where: { slug: mockBrand.slug },
+      });
     });
 
     it('should throw NotFoundException if not found', async () => {
       brandRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -130,7 +144,9 @@ describe('BrandsService', () => {
 
       const result = await service.update(mockBrand.id, updateDto);
 
-      expect(brandRepository.findOne).toHaveBeenCalledWith({ where: { id: mockBrand.id } });
+      expect(brandRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockBrand.id },
+      });
       expect(brandRepository.merge).toHaveBeenCalled();
       expect(result.name).toBe('Updated Brand');
     });
@@ -138,7 +154,9 @@ describe('BrandsService', () => {
     it('should throw NotFoundException if brand not found', async () => {
       brandRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if new slug already exists', async () => {
@@ -146,7 +164,9 @@ describe('BrandsService', () => {
       brandRepository.findOne.mockResolvedValueOnce(mockBrand);
       brandRepository.findOne.mockResolvedValueOnce(existingBrand);
 
-      await expect(service.update(mockBrand.id, { slug: 'existing-slug' })).rejects.toThrow(ConflictException);
+      await expect(
+        service.update(mockBrand.id, { slug: 'existing-slug' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -163,14 +183,18 @@ describe('BrandsService', () => {
     it('should throw NotFoundException if brand not found', async () => {
       brandRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if brand has products', async () => {
       const brandWithProducts = { ...mockBrand, products: [{ id: 'prod-1' }] };
       brandRepository.findOne.mockResolvedValue(brandWithProducts);
 
-      await expect(service.remove(mockBrand.id)).rejects.toThrow(BadRequestException);
+      await expect(service.remove(mockBrand.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

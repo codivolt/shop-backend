@@ -1,12 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { Order, OrderStatus } from './order.entity';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto/order.dto';
 import { OrderQueryDto } from './dto/order.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
-import { createTestOrder, createTestUser, createTestProduct, createTestDeliveryMethod } from '../../../test/utils/test-factories';
+import {
+  createTestOrder,
+  createTestUser,
+  createTestProduct,
+  createTestDeliveryMethod,
+} from '../../../test/utils/test-factories';
 
 describe('OrdersController', () => {
   let controller: OrdersController;
@@ -15,7 +24,10 @@ describe('OrdersController', () => {
   const mockUser = createTestUser();
   const mockProduct = createTestProduct();
   const mockDeliveryMethod = createTestDeliveryMethod();
-  const mockOrder = createTestOrder({ userId: mockUser.id, deliveryMethodId: mockDeliveryMethod.id });
+  const mockOrder = createTestOrder({
+    userId: mockUser.id,
+    deliveryMethodId: mockDeliveryMethod.id,
+  });
   const mockPaginatedResponse: PaginatedResponse<Order> = {
     data: [mockOrder],
     total: 1,
@@ -38,9 +50,7 @@ describe('OrdersController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [OrdersController],
-      providers: [
-        { provide: OrdersService, useValue: ordersService },
-      ],
+      providers: [{ provide: OrdersService, useValue: ordersService }],
     }).compile();
 
     controller = module.get<OrdersController>(OrdersController);
@@ -82,9 +92,13 @@ describe('OrdersController', () => {
     });
 
     it('should throw NotFoundException if user not found', async () => {
-      ordersService.create.mockRejectedValue(new NotFoundException('کاربر یافت نشد'));
+      ordersService.create.mockRejectedValue(
+        new NotFoundException('کاربر یافت نشد'),
+      );
 
-      await expect(controller.create(createDto, mockUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.create(createDto, mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -107,14 +121,21 @@ describe('OrdersController', () => {
 
       const result = await controller.findOne(mockOrder.id, mockUser);
 
-      expect(ordersService.findOne).toHaveBeenCalledWith(mockOrder.id, mockUser.id);
+      expect(ordersService.findOne).toHaveBeenCalledWith(
+        mockOrder.id,
+        mockUser.id,
+      );
       expect(result).toEqual(mockOrder);
     });
 
     it('should throw NotFoundException if not found', async () => {
-      ordersService.findOne.mockRejectedValue(new NotFoundException('سفارش یافت نشد'));
+      ordersService.findOne.mockRejectedValue(
+        new NotFoundException('سفارش یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent', mockUser)).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent', mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -140,16 +161,26 @@ describe('OrdersController', () => {
       const updatedOrder = { ...mockOrder, status: OrderStatus.CONFIRMED };
       ordersService.updateStatus.mockResolvedValue(updatedOrder);
 
-      const result = await controller.updateStatus(mockOrder.id, updateStatusDto);
+      const result = await controller.updateStatus(
+        mockOrder.id,
+        updateStatusDto,
+      );
 
-      expect(ordersService.updateStatus).toHaveBeenCalledWith(mockOrder.id, updateStatusDto);
+      expect(ordersService.updateStatus).toHaveBeenCalledWith(
+        mockOrder.id,
+        updateStatusDto,
+      );
       expect(result).toEqual(updatedOrder);
     });
 
     it('should throw NotFoundException if order not found', async () => {
-      ordersService.updateStatus.mockRejectedValue(new NotFoundException('سفارش یافت نشد'));
+      ordersService.updateStatus.mockRejectedValue(
+        new NotFoundException('سفارش یافت نشد'),
+      );
 
-      await expect(controller.updateStatus('nonexistent', updateStatusDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.updateStatus('nonexistent', updateStatusDto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -160,14 +191,21 @@ describe('OrdersController', () => {
 
       const result = await controller.cancel(mockOrder.id, mockUser);
 
-      expect(ordersService.cancel).toHaveBeenCalledWith(mockOrder.id, mockUser.id);
+      expect(ordersService.cancel).toHaveBeenCalledWith(
+        mockOrder.id,
+        mockUser.id,
+      );
       expect(result).toEqual(cancelledOrder);
     });
 
     it('should throw BadRequestException if order not cancellable', async () => {
-      ordersService.cancel.mockRejectedValue(new BadRequestException('سفارش قابل لغو نیست'));
+      ordersService.cancel.mockRejectedValue(
+        new BadRequestException('سفارش قابل لغو نیست'),
+      );
 
-      await expect(controller.cancel('nonexistent', mockUser)).rejects.toThrow(BadRequestException);
+      await expect(controller.cancel('nonexistent', mockUser)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

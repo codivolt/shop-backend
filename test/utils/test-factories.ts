@@ -53,7 +53,9 @@ export const createTestSuperAdmin = (overrides: Partial<User> = {}): User => {
   });
 };
 
-export const createTestCategory = (overrides: Partial<Category> = {}): Category => {
+export const createTestCategory = (
+  overrides: Partial<Category> = {},
+): Category => {
   const category = new Category();
   category.id = `cat-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   category.name = `Category ${Date.now()}`;
@@ -84,7 +86,9 @@ export const createTestBrand = (overrides: Partial<Brand> = {}): Brand => {
   return Object.assign(brand, overrides);
 };
 
-export const createTestProduct = (overrides: Partial<Product> = {}): Product => {
+export const createTestProduct = (
+  overrides: Partial<Product> = {},
+): Product => {
   const product = new Product();
   product.id = `prod-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   product.name = `Product ${Date.now()}`;
@@ -108,7 +112,7 @@ export const createTestProduct = (overrides: Partial<Product> = {}): Product => 
   product.categoryId = 'test-category-id';
   product.brandId = 'test-brand-id';
   product.category = null as any;
-  product.brand = null as any;
+  product.brand = null;
   product.images = [];
   product.attributes = [];
   product.orderItems = [];
@@ -160,7 +164,9 @@ export const createTestOrder = (overrides: Partial<Order> = {}): Order => {
   return Object.assign(order, overrides);
 };
 
-export const createTestOrderItem = (overrides: Partial<OrderItem> = {}): OrderItem => {
+export const createTestOrderItem = (
+  overrides: Partial<OrderItem> = {},
+): OrderItem => {
   const item = new OrderItem();
   item.id = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   item.orderId = 'test-order-id';
@@ -178,7 +184,9 @@ export const createTestOrderItem = (overrides: Partial<OrderItem> = {}): OrderIt
   return Object.assign(item, overrides);
 };
 
-export const createTestAddress = (overrides: Partial<Address> = {}): Address => {
+export const createTestAddress = (
+  overrides: Partial<Address> = {},
+): Address => {
   const address = new Address();
   address.id = `addr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   address.userId = 'test-user-id';
@@ -196,7 +204,9 @@ export const createTestAddress = (overrides: Partial<Address> = {}): Address => 
   return Object.assign(address, overrides);
 };
 
-export const createTestCartItem = (overrides: Partial<CartItem> = {}): CartItem => {
+export const createTestCartItem = (
+  overrides: Partial<CartItem> = {},
+): CartItem => {
   const item = new CartItem();
   item.id = `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   item.userId = 'test-user-id';
@@ -209,7 +219,9 @@ export const createTestCartItem = (overrides: Partial<CartItem> = {}): CartItem 
   return Object.assign(item, overrides);
 };
 
-export const createTestDeliveryMethod = (overrides: Partial<DeliveryMethod> = {}): DeliveryMethod => {
+export const createTestDeliveryMethod = (
+  overrides: Partial<DeliveryMethod> = {},
+): DeliveryMethod => {
   const method = new DeliveryMethod();
   method.id = `del-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   method.name = 'Standard Shipping';
@@ -226,7 +238,9 @@ export const createTestDeliveryMethod = (overrides: Partial<DeliveryMethod> = {}
   return Object.assign(method, overrides);
 };
 
-export const createTestPaymentAccount = (overrides: Partial<PaymentAccount> = {}): PaymentAccount => {
+export const createTestPaymentAccount = (
+  overrides: Partial<PaymentAccount> = {},
+): PaymentAccount => {
   const account = new PaymentAccount();
   account.id = `pay-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   account.userId = 'test-user-id';
@@ -242,7 +256,9 @@ export const createTestPaymentAccount = (overrides: Partial<PaymentAccount> = {}
   return Object.assign(account, overrides);
 };
 
-export const createTestPermission = (overrides: Partial<Permission> = {}): Permission => {
+export const createTestPermission = (
+  overrides: Partial<Permission> = {},
+): Permission => {
   const permission = new Permission();
   permission.id = `perm-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   permission.key = 'test:permission';
@@ -256,7 +272,9 @@ export const createTestPermission = (overrides: Partial<Permission> = {}): Permi
   return Object.assign(permission, overrides);
 };
 
-export const createTestRolePermission = (overrides: Partial<RolePermission> = {}): RolePermission => {
+export const createTestRolePermission = (
+  overrides: Partial<RolePermission> = {},
+): RolePermission => {
   const rp = new RolePermission();
   rp.id = `rp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   rp.role = 'admin';
@@ -267,7 +285,9 @@ export const createTestRolePermission = (overrides: Partial<RolePermission> = {}
   return Object.assign(rp, overrides);
 };
 
-export const createTestUserPermission = (overrides: Partial<UserPermission> = {}): UserPermission => {
+export const createTestUserPermission = (
+  overrides: Partial<UserPermission> = {},
+): UserPermission => {
   const up = new UserPermission();
   up.id = `up-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   up.userId = 'test-user-id';
@@ -279,7 +299,9 @@ export const createTestUserPermission = (overrides: Partial<UserPermission> = {}
   return Object.assign(up, overrides);
 };
 
-export const createTestNotification = (overrides: Partial<Notification> = {}): Notification => {
+export const createTestNotification = (
+  overrides: Partial<Notification> = {},
+): Notification => {
   const notification = new Notification();
   notification.id = `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   notification.userId = 'test-user-id';
@@ -295,7 +317,9 @@ export const createTestNotification = (overrides: Partial<Notification> = {}): N
   return Object.assign(notification, overrides);
 };
 
-export const createTestVerificationCode = (overrides: Partial<VerificationCode> = {}): VerificationCode => {
+export const createTestVerificationCode = (
+  overrides: Partial<VerificationCode> = {},
+): VerificationCode => {
   const code = new VerificationCode();
   code.id = `vc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   code.phone = '09123456789';

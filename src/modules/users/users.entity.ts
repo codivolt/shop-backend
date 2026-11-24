@@ -19,6 +19,17 @@ export enum UserRole {
   COURIER = 'courier',
 }
 
+const REFERRAL_CODE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const REFERRAL_CODE_LENGTH = 8;
+
+function generateReferralCode(): string {
+  let code = '';
+  for (let i = 0; i < REFERRAL_CODE_LENGTH; i++) {
+    code += REFERRAL_CODE_CHARS.charAt(Math.floor(Math.random() * REFERRAL_CODE_CHARS.length));
+  }
+  return code;
+}
+
 @Entity('users')
 export class User {
   @ApiProperty({
@@ -91,6 +102,10 @@ export class User {
   @Column({ type: 'char', length: 36, nullable: true })
   referredBy: string | null;
 
+  @ApiPropertyOptional({ description: 'کاربرانی که با کد رفرال این کاربر ثبت‌نام کرده‌اند' })
+  @OneToMany(() => User, (u) => u.referredBy)
+  referredUsers: User[];
+
   @ApiProperty({ example: '2024-01-01T00:00:00Z', description: 'تاریخ ایجاد' })
   @CreateDateColumn()
   createdAt: Date;
@@ -105,6 +120,13 @@ export class User {
   @ApiProperty({ description: 'مجازهای اختصاص یافته' })
   @OneToMany(() => UserPermission, (up) => up.user)
   permissions: UserPermission[];
+
+  @BeforeInsert()
+  async generateReferralCodeIfNeeded() {
+    if (!this.referralCode) {
+      this.referralCode = generateReferralCode();
+    }
+  }
 
   @BeforeInsert()
   @BeforeUpdate()

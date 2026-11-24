@@ -18,6 +18,7 @@ import { SearchModule } from './modules/search/search.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { PaymentAccountsModule } from './modules/payment-accounts/payment-accounts.module';
+import { DiscountModule } from './modules/discounts/discount.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { PaymentAccountsModule } from './modules/payment-accounts/payment-accoun
     PermissionsModule,
     DeliveryModule,
     PaymentAccountsModule,
+    DiscountModule,
   ],
   controllers: [AppController],
   providers: [AppService],

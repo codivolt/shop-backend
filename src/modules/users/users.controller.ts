@@ -19,6 +19,7 @@ import { mkdirSync } from 'fs';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { ChangePasswordDto, UpdateProfileDto } from './dto/update-profile.dto';
+import { CreateReferralTierDto, UpdateReferralTierDto } from './dto/referral-tier.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -33,6 +34,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { User, UserRole } from './users.entity';
+import { ReferralTier } from './referral-tier.entity';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -220,5 +222,74 @@ export class UsersController {
   async remove(@Param('id') id: string): Promise<{ message: string }> {
     await this.usersService.remove(id);
     return { message: 'کاربر با موفقیت حذف شد' };
+  }
+
+  // Referral Stats
+  @Get('referral/stats')
+  @ApiOperation({ summary: 'آمار رفرال (فقط ادمین)' })
+  @ApiResponse({ status: 200, description: 'آمار رفرال' })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.USERS_VIEW)
+  async getReferralStats(): Promise<{
+    totalUsers: number;
+    usersWithReferrals: number;
+    totalReferrals: number;
+    topReferrers: Array<{
+      id: string;
+      firstName: string | null;
+      lastName: string | null;
+      email: string;
+      referralCode: string | null;
+      referralCount: number;
+    }>;
+  }> {
+    return this.usersService.getReferralStats();
+  }
+
+  // Referral Tiers
+  @Get('referral/tiers')
+  @ApiOperation({ summary: 'لیست سطوح رفرال (فقط ادمین)' })
+  @ApiResponse({ status: 200, description: 'لیست سطوح رفرال', type: [ReferralTier] })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.USERS_VIEW)
+  async getReferralTiers(): Promise<ReferralTier[]> {
+    return this.usersService.getReferralTiers();
+  }
+
+  @Post('referral/tiers')
+  @ApiOperation({ summary: 'ایجاد سطح رفرال (فقط ادمین)' })
+  @ApiBody({ type: CreateReferralTierDto })
+  @ApiResponse({ status: 201, description: 'سطح رفرال ایجاد شد', type: ReferralTier })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.USERS_CREATE)
+  async createReferralTier(@Body() dto: CreateReferralTierDto): Promise<ReferralTier> {
+    return this.usersService.createReferralTier(dto);
+  }
+
+  @Put('referral/tiers/:id')
+  @ApiOperation({ summary: 'ویرایش سطح رفرال (فقط ادمین)' })
+  @ApiParam({ name: 'id', description: 'شناسه سطح رفرال' })
+  @ApiBody({ type: UpdateReferralTierDto })
+  @ApiResponse({ status: 200, description: 'سطح رفرال بروزرسانی شد', type: ReferralTier })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.USERS_UPDATE)
+  async updateReferralTier(@Param('id') id: string, @Body() dto: UpdateReferralTierDto): Promise<ReferralTier> {
+    return this.usersService.updateReferralTier(id, dto);
+  }
+
+  @Delete('referral/tiers/:id')
+  @ApiOperation({ summary: 'حذف سطح رفرال (فقط ادمین)' })
+  @ApiParam({ name: 'id', description: 'شناسه سطح رفرال' })
+  @ApiResponse({ status: 200, description: 'سطح رفرال حذف شد' })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.USERS_DELETE)
+  async deleteReferralTier(@Param('id') id: string): Promise<{ message: string }> {
+    await this.usersService.deleteReferralTier(id);
+    return { message: 'سطح رفرال با موفقیت حذف شد' };
   }
 }

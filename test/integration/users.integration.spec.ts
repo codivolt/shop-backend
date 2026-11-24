@@ -6,10 +6,24 @@ import { UsersModule } from '../../src/modules/users/users.module';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { UsersService } from '../../src/modules/users/users.service';
 import { User, UserRole } from '../../src/modules/users/users.entity';
-import { CreateUserDto, UpdateProfileDto, ChangePasswordDto } from '../../src/modules/users/dto/create-user.dto';
+import {
+  CreateUserDto,
+  UpdateProfileDto,
+  ChangePasswordDto,
+} from '../../src/modules/users/dto/create-user.dto';
 import { UserQueryDto } from '../../src/modules/users/dto/user-query.dto';
-import { createIntegrationModule, getRepository, createMockUser, createTestUser, createTestAdmin } from '../setup/integration.setup';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  createIntegrationModule,
+  getRepository,
+  createMockUser,
+  createTestUser,
+  createTestAdmin,
+} from '../setup/integration.setup';
+import {
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 
 describe('Users Module Integration Tests', () => {
   let module: TestingModule;
@@ -17,10 +31,7 @@ describe('Users Module Integration Tests', () => {
   let userRepository: Repository<User>;
 
   beforeAll(async () => {
-    module = await createIntegrationModule([
-      UsersModule,
-      AuthModule,
-    ]);
+    module = await createIntegrationModule([UsersModule, AuthModule]);
 
     usersService = module.get<UsersService>(UsersService);
     userRepository = getRepository(module, User);
@@ -74,7 +85,9 @@ describe('Users Module Integration Tests', () => {
 
       await usersService.create(createDto, UserRole.ADMIN);
 
-      await expect(usersService.create(createDto, UserRole.ADMIN)).rejects.toThrow(ConflictException);
+      await expect(
+        usersService.create(createDto, UserRole.ADMIN),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should not allow admin to create superadmin', async () => {
@@ -89,11 +102,16 @@ describe('Users Module Integration Tests', () => {
         role: UserRole.SUPER_ADMIN,
       };
 
-      await expect(usersService.create(createDto, UserRole.ADMIN)).rejects.toThrow(BadRequestException);
+      await expect(
+        usersService.create(createDto, UserRole.ADMIN),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should allow superadmin to create superadmin', async () => {
-      const superAdmin = createTestUser({ role: UserRole.SUPER_ADMIN, email: 'super@example.com' });
+      const superAdmin = createTestUser({
+        role: UserRole.SUPER_ADMIN,
+        email: 'super@example.com',
+      });
       await userRepository.save(superAdmin);
 
       const createDto: CreateUserDto = {
@@ -111,8 +129,16 @@ describe('Users Module Integration Tests', () => {
 
   describe('Find Operations', () => {
     const testUsers = [
-      createTestUser({ email: 'user1@example.com', firstName: 'User', lastName: 'One' }),
-      createTestUser({ email: 'user2@example.com', firstName: 'User', lastName: 'Two' }),
+      createTestUser({
+        email: 'user1@example.com',
+        firstName: 'User',
+        lastName: 'One',
+      }),
+      createTestUser({
+        email: 'user2@example.com',
+        firstName: 'User',
+        lastName: 'Two',
+      }),
       createTestAdmin({ email: 'admin@example.com' }),
     ];
 
@@ -161,7 +187,7 @@ describe('Users Module Integration Tests', () => {
       const result = await usersService.findAll(query);
 
       expect(result.data.length).toBeGreaterThan(0);
-      result.data.forEach(user => expect(user.isActive).toBe(true));
+      result.data.forEach((user) => expect(user.isActive).toBe(true));
     });
 
     it('should search users by term', async () => {
@@ -202,7 +228,9 @@ describe('Users Module Integration Tests', () => {
         phone: testUser.phone,
       };
 
-      await expect(usersService.updateProfile(testAdmin.id, updateDto)).rejects.toThrow(ConflictException);
+      await expect(
+        usersService.updateProfile(testAdmin.id, updateDto),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should update user by admin', async () => {
@@ -211,18 +239,31 @@ describe('Users Module Integration Tests', () => {
         isActive: false,
       };
 
-      const result = await usersService.update(testUser.id, updateDto, UserRole.ADMIN);
+      const result = await usersService.update(
+        testUser.id,
+        updateDto,
+        UserRole.ADMIN,
+      );
 
       expect(result.firstName).toBe('Admin Updated');
       expect(result.isActive).toBe(false);
     });
 
     it('should not allow admin to assign superadmin role', async () => {
-      await expect(usersService.update(testUser.id, { role: UserRole.SUPER_ADMIN }, UserRole.ADMIN)).rejects.toThrow(BadRequestException);
+      await expect(
+        usersService.update(
+          testUser.id,
+          { role: UserRole.SUPER_ADMIN },
+          UserRole.ADMIN,
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should change password', async () => {
-      const userWithPassword = createTestUser({ email: 'password@example.com', password: 'oldPassword123' });
+      const userWithPassword = createTestUser({
+        email: 'password@example.com',
+        password: 'oldPassword123',
+      });
       await userRepository.save(userWithPassword);
 
       const changePasswordDto: ChangePasswordDto = {
@@ -232,12 +273,17 @@ describe('Users Module Integration Tests', () => {
 
       await usersService.changePassword(userWithPassword.id, changePasswordDto);
 
-      const updatedUser = await userRepository.findOne({ where: { id: userWithPassword.id } });
+      const updatedUser = await userRepository.findOne({
+        where: { id: userWithPassword.id },
+      });
       expect(updatedUser!.passwordSetAt).toBeDefined();
     });
 
     it('should throw if current password incorrect', async () => {
-      const userWithPassword = createTestUser({ email: 'password2@example.com', password: 'oldPassword123' });
+      const userWithPassword = createTestUser({
+        email: 'password2@example.com',
+        password: 'oldPassword123',
+      });
       await userRepository.save(userWithPassword);
 
       const changePasswordDto: ChangePasswordDto = {
@@ -245,20 +291,30 @@ describe('Users Module Integration Tests', () => {
         newPassword: 'newPassword123',
       };
 
-      await expect(usersService.changePassword(userWithPassword.id, changePasswordDto)).rejects.toThrow(BadRequestException);
+      await expect(
+        usersService.changePassword(userWithPassword.id, changePasswordDto),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should allow password change without current password if not set before', async () => {
-      const userWithoutPassword = createTestUser({ email: 'nopass@example.com', passwordSetAt: null });
+      const userWithoutPassword = createTestUser({
+        email: 'nopass@example.com',
+        passwordSetAt: null,
+      });
       await userRepository.save(userWithoutPassword);
 
       const changePasswordDto: ChangePasswordDto = {
         newPassword: 'firstPassword123',
       };
 
-      await usersService.changePassword(userWithoutPassword.id, changePasswordDto);
+      await usersService.changePassword(
+        userWithoutPassword.id,
+        changePasswordDto,
+      );
 
-      const updatedUser = await userRepository.findOne({ where: { id: userWithoutPassword.id } });
+      const updatedUser = await userRepository.findOne({
+        where: { id: userWithoutPassword.id },
+      });
       expect(updatedUser!.passwordSetAt).toBeDefined();
     });
   });
@@ -270,12 +326,16 @@ describe('Users Module Integration Tests', () => {
 
       await usersService.remove(user.id);
 
-      const deletedUser = await userRepository.findOne({ where: { id: user.id } });
+      const deletedUser = await userRepository.findOne({
+        where: { id: user.id },
+      });
       expect(deletedUser).toBeNull();
     });
 
     it('should throw NotFoundException if user not found', async () => {
-      await expect(usersService.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(usersService.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -295,7 +355,9 @@ describe('Users Module Integration Tests', () => {
       await userRepository.save(user);
 
       const updateDto: UpdateProfileDto = { nationalId: '1234567890' };
-      await expect(usersService.updateProfile(user.id, updateDto)).rejects.toThrow(BadRequestException);
+      await expect(
+        usersService.updateProfile(user.id, updateDto),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should reject all-same-digits national ID', async () => {
@@ -303,7 +365,9 @@ describe('Users Module Integration Tests', () => {
       await userRepository.save(user);
 
       const updateDto: UpdateProfileDto = { nationalId: '1111111111' };
-      await expect(usersService.updateProfile(user.id, updateDto)).rejects.toThrow(BadRequestException);
+      await expect(
+        usersService.updateProfile(user.id, updateDto),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

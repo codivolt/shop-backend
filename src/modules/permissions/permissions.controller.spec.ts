@@ -1,10 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PermissionsController } from './permissions.controller';
 import { PermissionsService } from './permissions.service';
 import { Permission } from './permission.entity';
-import { CreatePermissionDto, UpdatePermissionDto, AssignRoleDto, AssignPermissionDto } from './dto/permission.dto';
-import { createTestPermission, createTestUser } from '../../../test/utils/test-factories';
+import {
+  CreatePermissionDto,
+  UpdatePermissionDto,
+  AssignRoleDto,
+  AssignPermissionDto,
+} from './dto/permission.dto';
+import {
+  createTestPermission,
+  createTestUser,
+} from '../../../test/utils/test-factories';
 
 describe('PermissionsController', () => {
   let controller: PermissionsController;
@@ -51,14 +63,20 @@ describe('PermissionsController', () => {
 
       const result = await controller.createPermission(createDto);
 
-      expect(permissionsService.createPermission).toHaveBeenCalledWith(createDto);
+      expect(permissionsService.createPermission).toHaveBeenCalledWith(
+        createDto,
+      );
       expect(result).toEqual(newPermission);
     });
 
     it('should throw ConflictException if key exists', async () => {
-      permissionsService.createPermission.mockRejectedValue(new ConflictException('کلید مجوز تکراری است'));
+      permissionsService.createPermission.mockRejectedValue(
+        new ConflictException('کلید مجوز تکراری است'),
+      );
 
-      await expect(controller.createPermission(createDto)).rejects.toThrow(ConflictException);
+      await expect(controller.createPermission(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -93,7 +111,9 @@ describe('PermissionsController', () => {
 
       const result = await controller.getUserPermissions(mockUser.id);
 
-      expect(permissionsService.getUserPermissions).toHaveBeenCalledWith(mockUser.id);
+      expect(permissionsService.getUserPermissions).toHaveBeenCalledWith(
+        mockUser.id,
+      );
       expect(result).toEqual(userPerms);
     });
   });
@@ -105,7 +125,10 @@ describe('PermissionsController', () => {
     };
 
     it('should assign permissions to role', async () => {
-      const result = [{ role: 'admin', permissionKey: 'products:read' }, { role: 'admin', permissionKey: 'products:write' }];
+      const result = [
+        { role: 'admin', permissionKey: 'products:read' },
+        { role: 'admin', permissionKey: 'products:write' },
+      ];
       permissionsService.assignRole.mockResolvedValue(result);
 
       const response = await controller.assignRole(assignRoleDto);
@@ -125,20 +148,31 @@ describe('PermissionsController', () => {
       const result = { userId: mockUser.id, permissionKey: 'custom:perm' };
       permissionsService.assignPermissionToUser.mockResolvedValue(result);
 
-      const response = await controller.assignPermissionToUser(assignPermissionDto);
+      const response =
+        await controller.assignPermissionToUser(assignPermissionDto);
 
-      expect(permissionsService.assignPermissionToUser).toHaveBeenCalledWith(assignPermissionDto);
+      expect(permissionsService.assignPermissionToUser).toHaveBeenCalledWith(
+        assignPermissionDto,
+      );
       expect(response).toEqual(result);
     });
   });
 
   describe('removePermissionFromUser', () => {
     it('should remove permission from user', async () => {
-      permissionsService.removePermissionFromUser.mockResolvedValue({ success: true });
+      permissionsService.removePermissionFromUser.mockResolvedValue({
+        success: true,
+      });
 
-      const result = await controller.removePermissionFromUser(mockUser.id, 'custom:perm');
+      const result = await controller.removePermissionFromUser(
+        mockUser.id,
+        'custom:perm',
+      );
 
-      expect(permissionsService.removePermissionFromUser).toHaveBeenCalledWith(mockUser.id, 'custom:perm');
+      expect(permissionsService.removePermissionFromUser).toHaveBeenCalledWith(
+        mockUser.id,
+        'custom:perm',
+      );
       expect(result).toEqual({ success: true });
     });
   });
@@ -149,7 +183,10 @@ describe('PermissionsController', () => {
 
       const result = await controller.hasPermission(mockUser.id, 'custom:perm');
 
-      expect(permissionsService.hasPermission).toHaveBeenCalledWith(mockUser.id, 'custom:perm');
+      expect(permissionsService.hasPermission).toHaveBeenCalledWith(
+        mockUser.id,
+        'custom:perm',
+      );
       expect(result).toEqual({ hasPermission: true });
     });
   });

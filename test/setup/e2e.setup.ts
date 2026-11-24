@@ -42,6 +42,7 @@ export const teardownE2E = async (): Promise<void> => {
 };
 
 export const getTestApp = (): INestApplication => app;
-export const getTestRequest = (): request.SuperTest<request.Test> => request(app.getHttpServer());
+export const getTestRequest = (): request.SuperTest<request.Test> =>
+  request(app.getHttpServer());
 export const getTestModule = (): TestingModule => moduleRef;
 export const getTestDataSource = (): DataSource => dataSource;

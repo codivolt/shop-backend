@@ -6,7 +6,10 @@ import { NotificationsService } from './notifications.service';
 import { Notification } from './notification.entity';
 import { User } from '../users/users.entity';
 import { createMockRepository } from '../../../test/utils/mock-helpers';
-import { createTestNotification, createTestUser } from '../../../test/utils/test-factories';
+import {
+  createTestNotification,
+  createTestUser,
+} from '../../../test/utils/test-factories';
 
 describe('NotificationsService', () => {
   let service: NotificationsService;
@@ -23,7 +26,10 @@ describe('NotificationsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         NotificationsService,
-        { provide: getRepositoryToken(Notification), useValue: notificationRepository },
+        {
+          provide: getRepositoryToken(Notification),
+          useValue: notificationRepository,
+        },
         { provide: getRepositoryToken(User), useValue: userRepository },
       ],
     }).compile();
@@ -41,16 +47,24 @@ describe('NotificationsService', () => {
         message: 'This is a test notification',
         data: { actionUrl: '/orders/123' },
       };
-      notificationRepository.save.mockResolvedValue({ ...createData, id: 'notif-1' } as any);
+      notificationRepository.save.mockResolvedValue({
+        ...createData,
+        id: 'notif-1',
+      } as any);
 
       const result = await service.create(createData);
 
-      expect(notificationRepository.save).toHaveBeenCalledWith(expect.objectContaining(createData));
+      expect(notificationRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining(createData),
+      );
       expect(result).toMatchObject(createData);
     });
 
     it('should create notifications for multiple users', async () => {
-      const user2 = createTestUser({ id: 'user-2', email: 'user2@example.com' });
+      const user2 = createTestUser({
+        id: 'user-2',
+        email: 'user2@example.com',
+      });
       const createData = {
         userIds: [mockUser.id, user2.id],
         type: 'warning' as const,
@@ -71,37 +85,60 @@ describe('NotificationsService', () => {
 
   describe('findAll', () => {
     it('should return user notifications', async () => {
-      const notifications = [mockNotification, createTestNotification({ userId: mockUser.id, type: 'success' })];
-      notificationRepository.findAndCount.mockResolvedValue([notifications, notifications.length]);
+      const notifications = [
+        mockNotification,
+        createTestNotification({ userId: mockUser.id, type: 'success' }),
+      ];
+      notificationRepository.findAndCount.mockResolvedValue([
+        notifications,
+        notifications.length,
+      ]);
 
       const result = await service.findAll(mockUser.id, { page: 1, limit: 10 });
 
-      expect(notificationRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: { userId: mockUser.id },
-      }));
+      expect(notificationRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: mockUser.id },
+        }),
+      );
       expect(result.data).toEqual(notifications);
     });
 
     it('should filter by isRead', async () => {
-      notificationRepository.findAndCount.mockResolvedValue([[mockNotification], 1]);
+      notificationRepository.findAndCount.mockResolvedValue([
+        [mockNotification],
+        1,
+      ]);
 
       await service.findAll(mockUser.id, { page: 1, limit: 10, isRead: false });
 
-      expect(notificationRepository.findAndCount).toHaveBeenCalledWith(expect.objectContaining({
-        where: { userId: mockUser.id, isRead: false },
-      }));
+      expect(notificationRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { userId: mockUser.id, isRead: false },
+        }),
+      );
     });
   });
 
   describe('markAsRead', () => {
     it('should mark notification as read', async () => {
-      const unreadNotification = { ...mockNotification, isRead: false, readAt: null };
+      const unreadNotification = {
+        ...mockNotification,
+        isRead: false,
+        readAt: null,
+      };
       notificationRepository.findOne.mockResolvedValue(unreadNotification);
-      notificationRepository.save.mockResolvedValue({ ...unreadNotification, isRead: true, readAt: new Date() } as any);
+      notificationRepository.save.mockResolvedValue({
+        ...unreadNotification,
+        isRead: true,
+        readAt: new Date(),
+      } as any);
 
       const result = await service.markAsRead(mockUser.id, mockNotification.id);
 
-      expect(notificationRepository.findOne).toHaveBeenCalledWith({ where: { id: mockNotification.id, userId: mockUser.id } });
+      expect(notificationRepository.findOne).toHaveBeenCalledWith({
+        where: { id: mockNotification.id, userId: mockUser.id },
+      });
       expect(result.isRead).toBe(true);
       expect(result.readAt).toBeDefined();
     });
@@ -109,7 +146,9 @@ describe('NotificationsService', () => {
     it('should throw NotFoundException if notification not found', async () => {
       notificationRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.markAsRead(mockUser.id, 'nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.markAsRead(mockUser.id, 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -117,15 +156,30 @@ describe('NotificationsService', () => {
     it('should mark all unread notifications as read', async () => {
       const unreadNotifications = [
         { ...mockNotification, isRead: false, readAt: null },
-        { ...createTestNotification({ userId: mockUser.id }), isRead: false, readAt: null },
+        {
+          ...createTestNotification({ userId: mockUser.id }),
+          isRead: false,
+          readAt: null,
+        },
       ];
       notificationRepository.find.mockResolvedValue(unreadNotifications);
-      notificationRepository.save.mockResolvedValue(unreadNotifications.map(n => ({ ...n, isRead: true, readAt: new Date() })) as any);
+      notificationRepository.save.mockResolvedValue(
+        unreadNotifications.map((n) => ({
+          ...n,
+          isRead: true,
+          readAt: new Date(),
+        })) as any,
+      );
 
       const result = await service.markAllAsRead(mockUser.id);
 
-      expect(notificationRepository.find).toHaveBeenCalledWith({ where: { userId: mockUser.id, isRead: false } });
-      expect(result).toEqual({ message: 'All notifications marked as read', count: 2 });
+      expect(notificationRepository.find).toHaveBeenCalledWith({
+        where: { userId: mockUser.id, isRead: false },
+      });
+      expect(result).toEqual({
+        message: 'All notifications marked as read',
+        count: 2,
+      });
     });
   });
 
@@ -135,7 +189,9 @@ describe('NotificationsService', () => {
 
       const result = await service.getUnreadCount(mockUser.id);
 
-      expect(notificationRepository.count).toHaveBeenCalledWith({ where: { userId: mockUser.id, isRead: false } });
+      expect(notificationRepository.count).toHaveBeenCalledWith({
+        where: { userId: mockUser.id, isRead: false },
+      });
       expect(result).toEqual({ count: 5 });
     });
   });
@@ -147,13 +203,18 @@ describe('NotificationsService', () => {
 
       await service.remove(mockUser.id, mockNotification.id);
 
-      expect(notificationRepository.delete).toHaveBeenCalledWith({ id: mockNotification.id, userId: mockUser.id });
+      expect(notificationRepository.delete).toHaveBeenCalledWith({
+        id: mockNotification.id,
+        userId: mockUser.id,
+      });
     });
 
     it('should throw NotFoundException if not found', async () => {
       notificationRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove(mockUser.id, 'nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove(mockUser.id, 'nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { BrandsController } from './brands.controller';
 import { BrandsService } from './brands.service';
 import { Brand } from './brand.entity';
@@ -35,9 +39,7 @@ describe('BrandsController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [BrandsController],
-      providers: [
-        { provide: BrandsService, useValue: brandsService },
-      ],
+      providers: [{ provide: BrandsService, useValue: brandsService }],
     }).compile();
 
     controller = module.get<BrandsController>(BrandsController);
@@ -64,9 +66,13 @@ describe('BrandsController', () => {
     });
 
     it('should throw ConflictException if slug exists', async () => {
-      brandsService.create.mockRejectedValue(new ConflictException('اسلاگ تکراری است'));
+      brandsService.create.mockRejectedValue(
+        new ConflictException('اسلاگ تکراری است'),
+      );
 
-      await expect(controller.create(createDto)).rejects.toThrow(ConflictException);
+      await expect(controller.create(createDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -94,9 +100,13 @@ describe('BrandsController', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      brandsService.findOne.mockRejectedValue(new NotFoundException('برند یافت نشد'));
+      brandsService.findOne.mockRejectedValue(
+        new NotFoundException('برند یافت نشد'),
+      );
 
-      await expect(controller.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -111,9 +121,13 @@ describe('BrandsController', () => {
     });
 
     it('should throw NotFoundException if not found', async () => {
-      brandsService.findOneBySlug.mockRejectedValue(new NotFoundException('برند یافت نشد'));
+      brandsService.findOneBySlug.mockRejectedValue(
+        new NotFoundException('برند یافت نشد'),
+      );
 
-      await expect(controller.findOneBySlug('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOneBySlug('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -129,14 +143,21 @@ describe('BrandsController', () => {
 
       const result = await controller.update(mockBrand.id, updateDto);
 
-      expect(brandsService.update).toHaveBeenCalledWith(mockBrand.id, updateDto);
+      expect(brandsService.update).toHaveBeenCalledWith(
+        mockBrand.id,
+        updateDto,
+      );
       expect(result).toEqual(updatedBrand);
     });
 
     it('should throw NotFoundException if brand not found', async () => {
-      brandsService.update.mockRejectedValue(new NotFoundException('برند یافت نشد'));
+      brandsService.update.mockRejectedValue(
+        new NotFoundException('برند یافت نشد'),
+      );
 
-      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(NotFoundException);
+      await expect(controller.update('nonexistent', updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -151,15 +172,23 @@ describe('BrandsController', () => {
     });
 
     it('should throw NotFoundException if brand not found', async () => {
-      brandsService.remove.mockRejectedValue(new NotFoundException('برند یافت نشد'));
+      brandsService.remove.mockRejectedValue(
+        new NotFoundException('برند یافت نشد'),
+      );
 
-      await expect(controller.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if brand has products', async () => {
-      brandsService.remove.mockRejectedValue(new BadRequestException('برند دارای محصول است'));
+      brandsService.remove.mockRejectedValue(
+        new BadRequestException('برند دارای محصول است'),
+      );
 
-      await expect(controller.remove(mockBrand.id)).rejects.toThrow(BadRequestException);
+      await expect(controller.remove(mockBrand.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });
