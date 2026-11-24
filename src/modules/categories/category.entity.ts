@@ -72,6 +72,14 @@ export class Category {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @ApiPropertyOptional({
+    example: '/uploads/categories/image.jpg',
+    description: 'لینک تصویر دسته‌بندی',
+    nullable: true,
+  })
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imageUrl: string | null;
+
   @ApiProperty({ example: '2024-01-01T00:00:00Z', description: 'تاریخ ایجاد' })
   @CreateDateColumn()
   createdAt: Date;

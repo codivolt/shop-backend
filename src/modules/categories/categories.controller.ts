@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   Post,
@@ -8,7 +9,14 @@ import {
   Body,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { randomUUID } from 'crypto';
+import { mkdirSync } from 'fs';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
 import {
   ApiTags,
   ApiOperation,
@@ -16,6 +24,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
@@ -30,6 +39,9 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { UserRole } from '../users/users.entity';
 import { PERMISSIONS } from '../auth/constants';
+
+const CATEGORY_IMAGE_DIR = join(process.cwd(), 'uploads', 'categories');
+mkdirSync(CATEGORY_IMAGE_DIR, { recursive: true });
 
 @ApiTags('دسته‌بندی‌ها')
 @ApiBearerAuth('access-token')
@@ -109,5 +121,50 @@ export class CategoriesController {
   @Permissions(PERMISSIONS.CATEGORIES_DELETE)
   async remove(@Param('id') id: string): Promise<void> {
     return this.categoriesService.remove(id);
+  }
+
+  @Post('upload-image')
+  @ApiOperation({ summary: 'آپلود تصویر دسته‌بندی (فقط ادمین)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'تصویر آپلود شد', schema: { type: 'object', properties: { imageUrl: { type: 'string' } } } })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.CATEGORIES_CREATE)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: CATEGORY_IMAGE_DIR,
+        filename: (_request, file, callback) => {
+          callback(
+            null,
+            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
+          );
+        },
+      }),
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_request, file, callback) => {
+        if (!file.mimetype.startsWith('image/')) {
+          callback(new BadRequestException('فقط فایل تصویری مجاز است'), false);
+          return;
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async uploadImage(
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<{ imageUrl: string }> {
+    if (!file) {
+      throw new BadRequestException('فایل تصویر را انتخاب کنید');
+    }
+    return { imageUrl: `/uploads/categories/${file.filename}` };
   }
 }

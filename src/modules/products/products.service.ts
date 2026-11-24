@@ -392,4 +392,17 @@ export class ProductsService {
         }) as unknown as Product,
     );
   }
+
+  async getFeatured(): Promise<Product[]> {
+    return this.productsRepository.find({
+      where: { isFeatured: true, isActive: true },
+      relations: {
+        category: true,
+        brand: true,
+        images: true,
+      },
+      order: { createdAt: 'DESC' },
+      take: 20,
+    });
+  }
 }

@@ -105,6 +105,10 @@ export class Product {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @ApiPropertyOptional({ example: false, description: 'محصول پیشنهادی/ویژه' })
+  @Column({ type: 'boolean', default: false })
+  isFeatured: boolean;
+
   @OneToMany(() => ProductImage, (image) => image.product)
   images: ProductImage[];
 

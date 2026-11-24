@@ -32,6 +32,11 @@ export class CreateCategoryDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ example: '/uploads/categories/image.jpg', description: 'لینک تصویر دسته‌بندی' })
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }
 
 export class UpdateCategoryDto {
@@ -62,4 +67,9 @@ export class UpdateCategoryDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  imageUrl?: string;
 }

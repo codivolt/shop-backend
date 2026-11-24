@@ -80,6 +80,15 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ example: false, description: 'محصول پیشنهادی' })
+  @Transform(
+    ({ value }) =>
+      value === true || value === 'true' || value === 1 || value === '1',
+  )
+  @IsBoolean()
+  @IsOptional()
+  isFeatured?: boolean;
 }
 
 export class UpdateProductDto {

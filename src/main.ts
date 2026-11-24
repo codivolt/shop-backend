@@ -20,7 +20,6 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new DatabaseExceptionFilter());
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
 
   const corsOrigins = process.env.CORS_ORIGINS?.split(',')
     .map((origin) => origin.trim())
@@ -30,6 +29,8 @@ async function bootstrap() {
     origin: corsOrigins?.length ? corsOrigins : true,
     credentials: true,
   });
+
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
 
   const config = new DocumentBuilder()
     .setTitle('فروشگاه اینترنتی API')
