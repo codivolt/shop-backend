@@ -28,7 +28,7 @@ export class ProductAttributeValue {
   productId: string;
 
   @ManyToOne(() => Product, (product) => product.attributeValues, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'productId' })
   product: Product;
@@ -40,7 +40,7 @@ export class ProductAttributeValue {
   @Column({ type: 'char', length: 36 })
   attributeId: string;
 
-  @ManyToOne(() => CategoryAttribute, { onDelete: 'CASCADE' })
+  @ManyToOne(() => CategoryAttribute, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'attributeId' })
   attribute: CategoryAttribute;
 

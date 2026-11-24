@@ -66,7 +66,7 @@ export class OrderItem {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'orderId' })
   order: Order;
 }

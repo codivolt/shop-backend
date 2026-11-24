@@ -34,7 +34,7 @@ export class CategoryAttribute {
   categoryId: string;
 
   @ManyToOne(() => Category, (category) => category.attributes, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'categoryId' })
   category: Category;

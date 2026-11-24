@@ -27,7 +27,7 @@ export class RolePermission {
   permissionId: string;
 
   @ApiProperty({ description: 'مجاز' })
-  @ManyToOne(() => Permission, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Permission, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'permissionId' })
   permission: Permission;
 

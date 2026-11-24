@@ -26,14 +26,14 @@ export class UserPermission {
 
   @ApiProperty({ description: 'کاربر' })
   @ManyToOne(() => User, (user) => user.permissions, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'userId' })
   user: User;
 
   @ApiProperty({ description: 'مجاز' })
   @ManyToOne(() => Permission, {
-    onDelete: 'CASCADE',
+    onDelete: 'RESTRICT',
   })
   @JoinColumn({ name: 'permissionId' })
   permission: Permission;
