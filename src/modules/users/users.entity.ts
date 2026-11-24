@@ -5,6 +5,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -120,6 +121,7 @@ export class User {
 
   @ApiPropertyOptional({ description: 'کاربرانی که با کد رفرال این کاربر ثبت‌نام کرده‌اند' })
   @OneToMany(() => User, (u) => u.referredBy)
+  @JoinColumn({ name: 'referredBy', referencedColumnName: 'id' })
   referredUsers: User[];
 
   @ApiProperty({ example: '2024-01-01T00:00:00Z', description: 'تاریخ ایجاد' })
