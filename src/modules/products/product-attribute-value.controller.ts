@@ -24,8 +24,11 @@ import {
 } from './dto/product-attribute-value.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Permissions } from '../auth/decorators/permissions.decorator';
 import { UserRole } from '../users/users.entity';
+import { PERMISSIONS } from '../auth/constants';
 
 @ApiTags('مقادیر ویژگی محصول')
 @ApiBearerAuth('access-token')
@@ -42,8 +45,9 @@ export class ProductAttributeValueController {
     description: 'مقدار ویژگی اضافه شد',
     type: ProductAttributeValueResponse,
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.PRODUCTS_CREATE)
   async create(
     @Param('productId') productId: string,
     @Body() dto: CreateProductAttributeValueDto,
@@ -73,8 +77,9 @@ export class ProductAttributeValueController {
     description: 'مقدار ویژگی بروزرسانی شد',
     type: ProductAttributeValueResponse,
   })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.PRODUCTS_UPDATE)
   async update(
     @Param('productId') productId: string,
     @Param('id') id: string,
@@ -87,8 +92,9 @@ export class ProductAttributeValueController {
   @ApiOperation({ summary: 'حذف مقدار ویژگی (فقط ادمین)' })
   @ApiParam({ name: 'id', description: 'شناسه مقدار ویژگی' })
   @ApiResponse({ status: 200, description: 'مقدار ویژگی حذف شد' })
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.PRODUCTS_DELETE)
   async remove(
     @Param('productId') productId: string,
     @Param('id') id: string,

@@ -8,16 +8,21 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { RegisterDto, AuthResponse } from './dto/auth.dto';
 import { User, UserRole } from '../users/users.entity';
 import { VerificationCode } from './verification-code.entity';
+import { RefreshToken } from './refresh-token.entity';
 import { SmsService } from './sms.service';
 import { SendCodeDto, VerifyCodeDto } from './dto/phone-auth.dto';
 
 const CODE_TTL_MINUTES = 5;
 const RESEND_COOLDOWN_SECONDS = 60;
+const REFRESH_TOKEN_TTL_DAYS = 30;
+const ACCESS_TOKEN_TTL = '15m';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +31,8 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectRepository(VerificationCode)
     private verificationCodesRepository: Repository<VerificationCode>,
+    @InjectRepository(RefreshToken)
+    private refreshTokensRepository: Repository<RefreshToken>,
     private smsService: SmsService,
     private permissionsService: PermissionsService,
   ) {}
@@ -36,13 +43,22 @@ export class AuthService {
       throw new ConflictException('ایمیل قبلاً ثبت شده است');
     }
 
+    if (registerDto.phone) {
+      const existingPhone = await this.usersService.findByPhone(registerDto.phone);
+      if (existingPhone) {
+        throw new ConflictException('شماره تماس قبلاً ثبت شده است');
+      }
+      throw new ConflictException(
+        'شماره تماس باید ابتدا تایید شود. لطفاً ابتدا کد تایید درخواست کنید.',
+      );
+    }
+
     const user = await this.usersService.create(
       {
         email: registerDto.email,
         password: registerDto.password,
         firstName: registerDto.firstName,
         lastName: registerDto.lastName,
-        phone: registerDto.phone,
       },
       UserRole.CUSTOMER,
     );
@@ -86,12 +102,12 @@ export class AuthService {
       await this.verificationCodesRepository.remove(existing);
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const verificationCode = this.verificationCodesRepository.create({
       phone: sendCodeDto.phone,
-      code,
-      expiresAt: new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000),
     });
+    await verificationCode.setCode(code);
+    verificationCode.expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000);
     await this.verificationCodesRepository.save(verificationCode);
 
     await this.smsService.sendCode(sendCodeDto.phone, code);
@@ -113,7 +129,7 @@ export class AuthService {
       throw new UnauthorizedException('کد تایید منقضی شده است');
     }
 
-    if (verificationCode.code !== verifyCodeDto.code) {
+    if (!(await verificationCode.validateCode(verifyCodeDto.code))) {
       throw new UnauthorizedException('کد تایید اشتباه است');
     }
 
@@ -121,20 +137,19 @@ export class AuthService {
 
     let user = await this.usersService.findByPhone(verifyCodeDto.phone);
     if (!user) {
-      user = await this.usersService.create(
-        {
-          email: `${verifyCodeDto.phone}@phone.local`,
-          password: Math.random().toString(36).slice(-12),
-          phone: verifyCodeDto.phone,
-        },
-        UserRole.CUSTOMER,
+      throw new UnauthorizedException(
+        'کاربری با این شماره تماس یافت نشد. لطفاً ابتدا ثبت‌نام کنید.',
       );
-      await this.usersService.markPasswordNotSet(user.id);
-      user.passwordSetAt = null;
     }
 
     if (!user.isActive) {
       throw new UnauthorizedException('حساب کاربری غیرفعال است');
+    }
+
+    // Mark phone as verified if not already
+    if (!user.phoneVerifiedAt) {
+      await this.usersService.markPhoneVerified(user.id);
+      user.phoneVerifiedAt = new Date();
     }
 
     return this.generateToken(user);
@@ -145,6 +160,7 @@ export class AuthService {
       email: user.email,
       sub: user.id,
       role: user.role,
+      tokenVersion: user.tokenVersion,
     };
 
     const userPermissions = (user.permissions || []).map(
@@ -161,8 +177,24 @@ export class AuthService {
 
     const permissions = [...userPermissions, ...roleKeys];
 
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
+
+    // Generate refresh token
+    const refreshToken = crypto.randomBytes(64).toString('hex');
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+
+    const refreshTokenEntity = this.refreshTokensRepository.create({
+      userId: user.id,
+      tokenHash: refreshTokenHash,
+      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
+    });
+    await this.refreshTokensRepository.save(refreshTokenEntity);
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      refresh_token: refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -175,5 +207,44 @@ export class AuthService {
         permissions,
       },
     };
+  }
+
+  async refreshTokens(refreshToken: string): Promise<AuthResponse> {
+    const refreshTokenEntities = await this.refreshTokensRepository.find({
+      where: {},
+    });
+
+    let validEntity: RefreshToken | null = null;
+    for (const entity of refreshTokenEntities) {
+      if (await entity.validateToken(refreshToken)) {
+        if (!entity.isExpired()) {
+          validEntity = entity;
+          break;
+        }
+      }
+    }
+
+    if (!validEntity) {
+      throw new UnauthorizedException('توکن تازه‌سازی نامعتبر یا منقضی شده است');
+    }
+
+    const user = await this.usersService.findById(validEntity.userId);
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('کاربر یافت نشد یا غیرفعال است');
+    }
+
+    // Remove the used refresh token
+    await this.refreshTokensRepository.remove(validEntity);
+
+    return this.generateToken(user);
+  }
+
+  async logout(userId: string): Promise<void> {
+    await this.refreshTokensRepository.delete({ userId });
+  }
+
+  async revokeAllTokens(userId: string): Promise<void> {
+    await this.refreshTokensRepository.delete({ userId });
+    await this.usersService.incrementTokenVersion(userId);
   }
 }

@@ -63,12 +63,7 @@ export class CategoryAttributeController {
     type: [CategoryAttributeResponse],
   })
   @UseGuards(JwtAuthGuard, PermissionsGuard)
-  @Permissions(
-    PERMISSIONS.CATEGORIES_ATTRIBUTES_VIEW,
-    PERMISSIONS.CATEGORIES_ATTRIBUTES_CREATE,
-    PERMISSIONS.CATEGORIES_ATTRIBUTES_UPDATE,
-    PERMISSIONS.CATEGORIES_ATTRIBUTES_DELETE,
-  )
+  @Permissions(PERMISSIONS.CATEGORIES_ATTRIBUTES_VIEW)
   async findAll(
     @Param('categoryId') categoryId: string,
   ): Promise<CategoryAttributeResponse[]> {

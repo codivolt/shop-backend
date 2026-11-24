@@ -25,31 +25,12 @@ export class CourierDeliverDto {
 }
 
 export class CreateOrderItemDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440003',
-    description: 'شناسه محصول (برای محاسبهٔ قیمت از پایگاه داده)',
+    description: 'شناسه محصول',
   })
   @IsUUID()
-  @IsOptional()
-  productId?: string;
-
-  @ApiPropertyOptional({
-    example: 'گوشی موبایل',
-    description: 'نام محصول (در صورت نداشتن شناسه محصول)',
-  })
-  @IsString()
-  @IsOptional()
-  productNameSnapshot?: string;
-
-  @ApiPropertyOptional({
-    example: 1500000,
-    description: 'قیمت یک واحد (فقط برای اقلام بدون شناسه محصول)',
-  })
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  unitPrice?: number;
+  productId: string;
 
   @ApiProperty({ example: 2, description: 'تعداد' })
   @Type(() => Number)

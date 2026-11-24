@@ -56,8 +56,16 @@ export class User {
   lastName: string;
 
   @ApiPropertyOptional({ example: '09123456789', description: 'شماره تماس' })
-  @Column({ type: 'varchar', length: 30, nullable: true })
+  @Column({ type: 'varchar', length: 30, nullable: true, unique: true })
   phone: string;
+
+  @ApiPropertyOptional({
+    example: '2024-01-01T00:00:00Z',
+    description: 'زمان تأیید شماره تماس',
+    nullable: true,
+  })
+  @Column({ type: 'datetime', nullable: true })
+  phoneVerifiedAt: Date | null;
 
   @ApiPropertyOptional({ example: '0012345679', description: 'کد ملی' })
   @Column({ type: 'varchar', length: 10, nullable: true, unique: true })
@@ -93,6 +101,14 @@ export class User {
   @ApiProperty({ example: true, description: 'فعال/غیرفعال' })
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  @ApiPropertyOptional({ description: 'نسخه توکن برای انقضای توکن‌های قبلی' })
+  @Column({ type: 'int', default: 0 })
+  tokenVersion: number;
+
+  @ApiPropertyOptional({ description: 'توکن تازه‌سازی (هش شده)' })
+  @Column({ type: 'varchar', length: 255, nullable: true, select: false })
+  refreshTokenHash: string | null;
 
   @ApiPropertyOptional({ example: 'REF12345', description: 'کد رفرال کاربر' })
   @Column({ type: 'varchar', length: 20, unique: true, nullable: true })

@@ -39,7 +39,7 @@ export class PermissionsGuard implements CanActivate {
 
     const userKeys = (user.permissions || []).map((p) => p.permission.key);
 
-    const hasPermission = requiredPermissions.some((p) => userKeys.includes(p));
+    const hasPermission = requiredPermissions.every((p) => userKeys.includes(p));
 
     if (!hasPermission) {
       throw new ForbiddenException('دسترسی به این بخش وجود ندارد');

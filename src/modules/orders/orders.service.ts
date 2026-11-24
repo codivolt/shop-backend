@@ -69,38 +69,29 @@ export class OrdersService {
       let totalAmount = 0;
 
       for (const itemDto of createOrderDto.items) {
-        let unitPrice = itemDto.unitPrice ?? 0;
-        let productName = itemDto.productNameSnapshot?.trim() ?? '';
+        const product = await manager.findOne(Product, {
+          where: { id: itemDto.productId },
+          lock: { mode: 'pessimistic_write' },
+        });
 
-        if (itemDto.productId) {
-          const product = await manager.findOne(Product, {
-            where: { id: itemDto.productId },
-            lock: { mode: 'pessimistic_write' },
-          });
-
-          if (!product) {
-            throw new NotFoundException('محصول سفارش یافت نشد');
-          }
-          if (!product.isActive) {
-            throw new BadRequestException(
-              `محصول «${product.name}» غیرفعال است`,
-            );
-          }
-          if (product.stock < itemDto.quantity) {
-            throw new BadRequestException(
-              `موجودی محصول «${product.name}» کافی نیست`,
-            );
-          }
-
-          unitPrice = Number(product.price);
-          productName = product.name;
-          product.stock -= itemDto.quantity;
-          await manager.save(product);
+        if (!product) {
+          throw new NotFoundException('محصول سفارش یافت نشد');
+        }
+        if (!product.isActive) {
+          throw new BadRequestException(
+            `محصول «${product.name}» غیرفعال است`,
+          );
+        }
+        if (product.stock < itemDto.quantity) {
+          throw new BadRequestException(
+            `موجودی محصول «${product.name}» کافی نیست`,
+          );
         }
 
-        if (!productName) {
-          throw new BadRequestException('نام محصول برای هر آیتم الزامی است');
-        }
+        const unitPrice = Number(product.price);
+        const productName = product.name;
+        product.stock -= itemDto.quantity;
+        await manager.save(product);
 
         const totalPrice = unitPrice * itemDto.quantity;
         totalAmount += totalPrice;
@@ -108,7 +99,7 @@ export class OrdersService {
         items.push(
           manager.create(OrderItem, {
             orderId: savedOrder.id,
-            productId: itemDto.productId ?? null,
+            productId: itemDto.productId,
             productNameSnapshot: productName,
             unitPrice,
             quantity: itemDto.quantity,

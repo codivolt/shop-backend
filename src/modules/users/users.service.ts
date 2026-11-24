@@ -239,6 +239,14 @@ export class UsersService {
     await this.usersRepository.update(id, { passwordSetAt: null });
   }
 
+  async markPhoneVerified(id: string): Promise<void> {
+    await this.usersRepository.update(id, { phoneVerifiedAt: new Date() });
+  }
+
+  async incrementTokenVersion(id: string): Promise<void> {
+    await this.usersRepository.increment({ id }, 'tokenVersion', 1);
+  }
+
   async remove(id: string): Promise<void> {
     const result = await this.usersRepository.delete(id);
     if (result.affected === 0) {

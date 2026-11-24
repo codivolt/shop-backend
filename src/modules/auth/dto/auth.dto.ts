@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
@@ -59,6 +59,9 @@ export class LoginDto {
 export class AuthResponse {
   @ApiProperty({ example: 'eyJhbGci...', description: 'توکن دسترسی JWT' })
   access_token: string;
+
+  @ApiPropertyOptional({ example: 'abc123...', description: 'توکن تازه‌سازی' })
+  refresh_token?: string;
 
   @ApiProperty({ description: 'مشخصات کاربر' })
   user: {

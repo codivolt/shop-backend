@@ -46,6 +46,7 @@ import {
 import { Order } from './order.entity';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
+import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
 
 const RECEIPT_DIR = join(process.cwd(), 'uploads', 'receipts');
 mkdirSync(RECEIPT_DIR, { recursive: true });
@@ -84,11 +85,7 @@ export class OrdersController {
   @ApiPaginatedResponse(Order)
   @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(UserRole.ADMIN)
-  @Permissions(
-    PERMISSIONS.ORDERS_VIEW,
-    PERMISSIONS.ORDERS_UPDATE,
-    PERMISSIONS.ORDERS_DELETE,
-  )
+  @Permissions(PERMISSIONS.ORDERS_VIEW)
   async findAllAdmin(
     @Query() query: OrderQueryDto,
   ): Promise<PaginatedResponse<Order>> {
@@ -104,8 +101,9 @@ export class OrdersController {
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<Order> {
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
     const order =
-      user.role === UserRole.ADMIN
+      isAdmin
         ? await this.ordersService.findById(id)
         : await this.ordersService.findByIdAndUser(id, user.id);
 
@@ -164,27 +162,7 @@ export class OrdersController {
   })
   @ApiResponse({ status: 200, description: 'فیش بارگذاری شد', type: Order })
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: RECEIPT_DIR,
-        filename: (_request, file, callback) => {
-          callback(
-            null,
-            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
-          );
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 },
-      fileFilter: (_request, file, callback) => {
-        if (!file.mimetype.startsWith('image/')) {
-          callback(new BadRequestException('فقط فایل تصویری مجاز است'), false);
-          return;
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }))
   async uploadReceipt(
     @CurrentUser() user: User,
     @Param('id') id: string,
@@ -193,6 +171,10 @@ export class OrdersController {
     if (!file) {
       throw new BadRequestException('فایل فیش را انتخاب کنید');
     }
+
+    validateImageFile(file);
+
+    const filename = await processAndSaveImage(file, RECEIPT_DIR, { width: 1920, height: 1920 });
 
     const order =
       user.role === UserRole.ADMIN
@@ -203,10 +185,7 @@ export class OrdersController {
       throw new NotFoundException('سفارش یافت نشد');
     }
 
-    return this.ordersService.updateReceipt(
-      id,
-      `/uploads/receipts/${file.filename}`,
-    );
+    return this.ordersService.updateReceipt(id, `/uploads/receipts/${filename}`);
   }
 
   @Delete(':id')

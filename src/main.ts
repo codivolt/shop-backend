@@ -3,7 +3,6 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
-import { join } from 'path';
 import { AppModule } from './app.module';
 import { DatabaseExceptionFilter } from './common/filters/database-exception.filter';
 
@@ -25,34 +24,39 @@ async function bootstrap() {
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  if (!corsOrigins?.length) {
+    throw new Error('CORS_ORIGINS environment variable is required');
+  }
+
   app.enableCors({
-    origin: corsOrigins?.length ? corsOrigins : true,
+    origin: corsOrigins,
     credentials: true,
   });
 
-  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
+  // Disable Swagger in production
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('فروشگاه اینترنتی API')
+      .setDescription('مستندات API فروشگاه اینترنتی با NestJS و MySQL')
+      .setVersion('1.0')
+      .addBearerAuth(
+        {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          name: 'JWT',
+          description: 'توكن JWT را وارد کنید',
+          in: 'header',
+        },
+        'access-token',
+      )
+      .build();
 
-  const config = new DocumentBuilder()
-    .setTitle('فروشگاه اینترنتی API')
-    .setDescription('مستندات API فروشگاه اینترنتی با NestJS و MySQL')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'توکن JWT را وارد کنید',
-        in: 'header',
-      },
-      'access-token',
-    )
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document, {
-    swaggerOptions: { persistAuthorization: true },
-  });
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document, {
+      swaggerOptions: { persistAuthorization: true },
+    });
+  }
 
   app.enableShutdownHooks();
 
@@ -60,10 +64,12 @@ async function bootstrap() {
   await app.listen(port);
 
   Logger.log(`API در حال اجرا روی http://localhost:${port}`, 'Bootstrap');
-  Logger.log(
-    `Swagger در دسترس است روی http://localhost:${port}/api`,
-    'Bootstrap',
-  );
+  if (process.env.NODE_ENV !== 'production') {
+    Logger.log(
+      `Swagger در دسترس است روی http://localhost:${port}/api`,
+      'Bootstrap',
+    );
+  }
 }
 
 bootstrap().catch((error) => {

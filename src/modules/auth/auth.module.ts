@@ -10,6 +10,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { VerificationCode } from './verification-code.entity';
+import { RefreshToken } from './refresh-token.entity';
 import { SmsService, MockSmsService } from './sms.service';
 import { jwtConfig } from '../../config/jwt.config';
 
@@ -18,7 +19,7 @@ import { jwtConfig } from '../../config/jwt.config';
     UsersModule,
     PermissionsModule,
     PassportModule,
-    TypeOrmModule.forFeature([VerificationCode]),
+    TypeOrmModule.forFeature([VerificationCode, RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: jwtConfig,

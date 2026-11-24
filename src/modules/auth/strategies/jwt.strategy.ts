@@ -11,6 +11,7 @@ interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  tokenVersion: number;
 }
 
 @Injectable()
@@ -30,6 +31,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.usersService.findById(payload.sub);
     if (!user || !user.isActive) {
       throw new UnauthorizedException('احراز هویت لازم است');
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new UnauthorizedException('توکن منقضی شده است. لطفاً مجدداً وارد شوید.');
     }
 
     const userKeys = (user.permissions || []).map((p) => p.permission.key);

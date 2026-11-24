@@ -43,6 +43,7 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PERMISSIONS } from '../auth/constants';
+import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
 
 const AVATAR_DIR = join(process.cwd(), 'uploads', 'avatars');
 mkdirSync(AVATAR_DIR, { recursive: true });
@@ -132,27 +133,7 @@ export class UsersController {
     },
   })
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: AVATAR_DIR,
-        filename: (_request, file, callback) => {
-          callback(
-            null,
-            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
-          );
-        },
-      }),
-      limits: { fileSize: 2 * 1024 * 1024 },
-      fileFilter: (_request, file, callback) => {
-        if (!file.mimetype.startsWith('image/')) {
-          callback(new BadRequestException('فقط فایل تصویری مجاز است'), false);
-          return;
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }))
   async uploadAvatar(
     @CurrentUser() user: User,
     @UploadedFile() file?: Express.Multer.File,
@@ -161,8 +142,12 @@ export class UsersController {
       throw new BadRequestException('فایل تصویر را انتخاب کنید');
     }
 
+    validateImageFile(file);
+
+    const filename = await processAndSaveImage(file, AVATAR_DIR, { width: 512, height: 512 });
+
     return this.usersService.updateProfile(user.id, {
-      avatarUrl: `/uploads/avatars/${file.filename}`,
+      avatarUrl: `/uploads/avatars/${filename}`,
     });
   }
 

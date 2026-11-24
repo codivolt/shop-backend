@@ -7,6 +7,9 @@ export abstract class SmsService {
 @Injectable()
 export class MockSmsService extends SmsService {
   async sendCode(phone: string, code: string): Promise<void> {
+    if (process.env.NODE_ENV === 'production') {
+      return;
+    }
     console.log(`\n╔═══════════════════════════════════════════╗`);
     console.log(`║  SMS کد تایید برای ${phone}`);
     console.log(`║  کد: ${code}`);

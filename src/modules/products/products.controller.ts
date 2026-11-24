@@ -39,6 +39,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { UserRole } from '../users/users.entity';
 import { PERMISSIONS } from '../auth/constants';
+import { validateImageFile, processAndSaveImage, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
 
 const PRODUCT_IMAGE_DIR = join(process.cwd(), 'uploads', 'products');
 mkdirSync(PRODUCT_IMAGE_DIR, { recursive: true });
@@ -150,33 +151,18 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(UserRole.ADMIN)
   @Permissions(PERMISSIONS.PRODUCTS_CREATE)
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: PRODUCT_IMAGE_DIR,
-        filename: (_request, file, callback) => {
-          callback(
-            null,
-            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
-          );
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 },
-      fileFilter: (_request, file, callback) => {
-        if (!file.mimetype.startsWith('image/')) {
-          callback(new BadRequestException('فقط فایل تصویری مجاز است'), false);
-          return;
-        }
-        callback(null, true);
-      },
-    }),
-  )
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }))
   async uploadImage(
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<{ imageUrl: string }> {
     if (!file) {
       throw new BadRequestException('فایل تصویر را انتخاب کنید');
     }
-    return { imageUrl: `/uploads/products/${file.filename}` };
+
+    validateImageFile(file);
+
+    const filename = await processAndSaveImage(file, PRODUCT_IMAGE_DIR, { width: 1920, height: 1920 });
+
+    return { imageUrl: `/uploads/products/${filename}` };
   }
 }

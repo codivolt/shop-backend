@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './config/config.module';
@@ -19,10 +21,17 @@ import { PermissionsModule } from './modules/permissions/permissions.module';
 import { DeliveryModule } from './modules/delivery/delivery.module';
 import { PaymentAccountsModule } from './modules/payment-accounts/payment-accounts.module';
 import { DiscountModule } from './modules/discounts/discount.module';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
     ConfigModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     UsersModule,
     AuthModule,
     CategoriesModule,
@@ -40,8 +49,15 @@ import { DiscountModule } from './modules/discounts/discount.module';
     DeliveryModule,
     PaymentAccountsModule,
     DiscountModule,
+    FilesModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

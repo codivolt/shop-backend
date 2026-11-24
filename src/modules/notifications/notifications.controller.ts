@@ -16,14 +16,14 @@ export class NotificationsController {
 
   @Get()
   @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.NOTIFICATIONS_VIEW, PERMISSIONS.NOTIFICATIONS_UPDATE)
+  @Permissions(PERMISSIONS.NOTIFICATIONS_VIEW)
   findAll() {
     return this.service.findAll();
   }
 
   @Get('unread-count')
   @UseGuards(PermissionsGuard)
-  @Permissions(PERMISSIONS.NOTIFICATIONS_VIEW, PERMISSIONS.NOTIFICATIONS_UPDATE)
+  @Permissions(PERMISSIONS.NOTIFICATIONS_VIEW)
   unreadCount() {
     return this.service.unreadCount();
   }
