@@ -97,6 +97,27 @@ export class UsersController {
     return { message: 'رمز عبور با موفقیت به‌روزرسانی شد' };
   }
 
+  @Post('me/referral')
+  @ApiOperation({ summary: 'اعمال کد رفرال به حساب کاربر' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        referralCode: { type: 'string', example: 'REF12345' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'کد رفرال اعمال شد' })
+  @ApiResponse({ status: 400, description: 'کد رفرال معتبر نیست یا قبلاً ثبت شده است' })
+  @UseGuards(JwtAuthGuard)
+  async applyReferral(
+    @CurrentUser() user: User,
+    @Body() body: { referralCode: string },
+  ): Promise<{ message: string }> {
+    await this.usersService.applyReferralCode(user.id, body.referralCode);
+    return { message: 'کد رفرال با موفقیت اعمال شد' };
+  }
+
   @Post('me/avatar')
   @ApiOperation({ summary: 'بارگذاری عکس پروفایل' })
   @ApiConsumes('multipart/form-data')

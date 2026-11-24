@@ -242,6 +242,35 @@ export class UsersService {
     }
   }
 
+  async applyReferralCode(userId: string, referralCode: string): Promise<void> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('کاربر یافت نشد');
+    }
+
+    if (user.referredBy) {
+      throw new BadRequestException('کد رفرال قبلاً برای این حساب ثبت شده است');
+    }
+
+    if (user.referralCode === referralCode) {
+      throw new BadRequestException('نمی‌توانید کد رفرال خود را استفاده کنید');
+    }
+
+    const referrer = await this.usersRepository.findOne({
+      where: { referralCode },
+    });
+    if (!referrer) {
+      throw new BadRequestException('کد رفرال معتبر نیست');
+    }
+
+    if (referrer.id === userId) {
+      throw new BadRequestException('نمی‌توانید کد رفرال خود را استفاده کنید');
+    }
+
+    user.referredBy = referrer.id;
+    await this.usersRepository.save(user);
+  }
+
   private stripPassword(user: User): User {
     delete (user as Partial<User>).password;
     return user;

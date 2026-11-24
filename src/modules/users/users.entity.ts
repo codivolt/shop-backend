@@ -83,6 +83,14 @@ export class User {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @ApiPropertyOptional({ example: 'REF12345', description: 'کد رفرال کاربر' })
+  @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
+  referralCode: string | null;
+
+  @ApiPropertyOptional({ description: 'کاربر معرف (کد رفرال)' })
+  @Column({ type: 'char', length: 36, nullable: true })
+  referredBy: string | null;
+
   @ApiProperty({ example: '2024-01-01T00:00:00Z', description: 'تاریخ ایجاد' })
   @CreateDateColumn()
   createdAt: Date;

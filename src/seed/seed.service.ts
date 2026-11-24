@@ -148,6 +148,7 @@ const DEFAULT_USERS = [
     firstName: 'سوپر',
     lastName: 'مدیر',
     phone: '09120000000',
+    referralCode: 'SUPER001',
     isActive: true,
   },
   {
@@ -157,6 +158,7 @@ const DEFAULT_USERS = [
     firstName: 'مدیر',
     lastName: 'سیستم',
     phone: '09120000001',
+    referralCode: 'ADMIN01',
     isActive: true,
   },
   {
@@ -166,6 +168,7 @@ const DEFAULT_USERS = [
     firstName: 'مشتری',
     lastName: 'نمونه',
     phone: '09120000002',
+    referralCode: 'CUST01',
     isActive: true,
   },
 ];
@@ -283,6 +286,7 @@ export class SeedService implements OnModuleInit {
         firstName: u.firstName,
         lastName: u.lastName,
         phone,
+        referralCode: u.referralCode,
         isActive: u.isActive,
         passwordSetAt: new Date(),
       };

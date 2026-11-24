@@ -39,6 +39,17 @@ export class UpdateProfileDto {
   @IsString()
   @IsOptional()
   avatarUrl?: string;
+
+  @ApiPropertyOptional({
+    example: 'REF12345',
+    description: 'کد رفرال (اختیاری، برای دریافت overwhel)',
+  })
+  @IsString()
+  @IsOptional()
+  @Matches(/^[A-Z0-9]{6,20}$/, {
+    message: 'کد رفرال باید فقط شامل حروف بزرگ انگلیسی و عدد باشد (۶ تا ۲۰ کاراکتر)',
+  })
+  referralCode?: string;
 }
 
 export class ChangePasswordDto {
