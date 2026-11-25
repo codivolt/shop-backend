@@ -163,6 +163,6 @@ export class ProductsController {
 
     const filename = await processAndSaveImage(file, PRODUCT_IMAGE_DIR, { width: 1920, height: 1920 });
 
-    return { imageUrl: `/uploads/products/${filename}` };
+    return { imageUrl: `/files/products/${filename}` };
   }
 }

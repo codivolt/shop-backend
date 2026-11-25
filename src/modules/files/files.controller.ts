@@ -63,6 +63,7 @@ export class FilesController {
   }
 
   @Get('products/:filename')
+  @Get('uploads/products/:filename')
   async serveProductImage(
     @Param('filename') filename: string,
     @Res() res: Response,
