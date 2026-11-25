@@ -185,7 +185,7 @@ export class OrdersController {
       throw new NotFoundException('سفارش یافت نشد');
     }
 
-    return this.ordersService.updateReceipt(id, `/uploads/receipts/${filename}`);
+    return this.ordersService.updateReceipt(id, `/files/receipts/${filename}`);
   }
 
   @Delete(':id')

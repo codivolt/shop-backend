@@ -85,6 +85,13 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   receiptImageUrl: string | null;
 
+  @ApiPropertyOptional({
+    example: 'فیش نامعتبر است',
+    description: 'دلیل رد فیش پرداخت',
+  })
+  @Column({ type: 'text', nullable: true })
+  rejectionReason: string | null;
+
   @ApiProperty({
     example: 'pending',
     enum: OrderStatus,

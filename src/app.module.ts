@@ -26,12 +26,15 @@ import { FilesModule } from './modules/files/files.module';
 @Module({
   imports: [
     ConfigModule,
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 100,
+        },
+      ],
+      errorMessage: 'تعداد درخواست‌های شما بیش از حد مجاز است. لطفا بعدا تلاش کنید.',
+    }),
     UsersModule,
     AuthModule,
     CategoriesModule,

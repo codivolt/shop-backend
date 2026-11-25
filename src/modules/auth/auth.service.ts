@@ -137,19 +137,16 @@ export class AuthService {
 
     let user = await this.usersService.findByPhone(verifyCodeDto.phone);
     if (!user) {
-      throw new UnauthorizedException(
-        'کاربری با این شماره تماس یافت نشد. لطفاً ابتدا ثبت‌نام کنید.',
-      );
-    }
+      user = await this.usersService.createByPhone(verifyCodeDto.phone);
+    } else {
+      if (!user.isActive) {
+        throw new UnauthorizedException('حساب کاربری غیرفعال است');
+      }
 
-    if (!user.isActive) {
-      throw new UnauthorizedException('حساب کاربری غیرفعال است');
-    }
-
-    // Mark phone as verified if not already
-    if (!user.phoneVerifiedAt) {
-      await this.usersService.markPhoneVerified(user.id);
-      user.phoneVerifiedAt = new Date();
+      if (!user.phoneVerifiedAt) {
+        await this.usersService.markPhoneVerified(user.id);
+        user.phoneVerifiedAt = new Date();
+      }
     }
 
     return this.generateToken(user);

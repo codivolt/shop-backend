@@ -70,6 +70,24 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { phone } });
   }
 
+  async createByPhone(phone: string): Promise<User> {
+    const existing = await this.findByPhone(phone);
+    if (existing) {
+      return existing;
+    }
+
+    const user = this.usersRepository.create({
+      email: `${phone}@phone.local`,
+      password: '',
+      phone,
+      role: UserRole.CUSTOMER,
+      isActive: true,
+      phoneVerifiedAt: new Date(),
+    });
+
+    return this.stripPassword(await this.usersRepository.save(user));
+  }
+
   async findByPhoneWithPassword(phone: string): Promise<User | null> {
     return this.usersRepository
       .createQueryBuilder('user')

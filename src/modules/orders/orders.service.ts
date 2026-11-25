@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
-import { Order, OrderStatus } from './order.entity';
+import { Order, OrderStatus, PaymentStatus } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { Address } from '../addresses/address.entity';
 import { Product } from '../products/product.entity';
@@ -202,6 +202,14 @@ export class OrdersService {
     }
 
     order.paymentStatus = updatePaymentStatusDto.paymentStatus;
+
+    if (updatePaymentStatusDto.paymentStatus === PaymentStatus.UNPAID) {
+      order.rejectionReason =
+        updatePaymentStatusDto.rejectionReason ?? null;
+    } else {
+      order.rejectionReason = null;
+    }
+
     return this.ordersRepository.save(order);
   }
 

@@ -99,6 +99,14 @@ export class UpdatePaymentStatusDto {
   })
   @IsEnum(PaymentStatus)
   paymentStatus: PaymentStatus;
+
+  @ApiPropertyOptional({
+    example: 'فیش نامعتبر است',
+    description: 'دلیل رد فیش پرداخت',
+  })
+  @IsString()
+  @IsOptional()
+  rejectionReason?: string | null;
 }
 
 export class OrderQueryDto extends PaginationDto {
