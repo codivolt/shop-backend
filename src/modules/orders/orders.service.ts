@@ -161,6 +161,7 @@ export class OrdersService {
     return this.ordersRepository.findOne({
       where: { id },
       relations: { items: true, receiptHistory: true },
+      order: { receiptHistory: { createdAt: 'DESC' } },
     });
   }
 
@@ -168,6 +169,7 @@ export class OrdersService {
     return this.ordersRepository.findOne({
       where: { id, userId },
       relations: { items: true, receiptHistory: true },
+      order: { receiptHistory: { createdAt: 'DESC' } },
     });
   }
 
