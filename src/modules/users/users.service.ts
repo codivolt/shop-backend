@@ -323,7 +323,7 @@ export class UsersService {
 
     const totalReferrals = await this.usersRepository
       .createQueryBuilder('referrer')
-      .leftJoin('referrer.referredUsers', 'referred')
+      .leftJoin('User', 'referred', 'referred.referredBy = referrer.referralCode')
       .select('referrer.id', 'id')
       .addSelect('referrer.firstName', 'firstName')
       .addSelect('referrer.lastName', 'lastName')
