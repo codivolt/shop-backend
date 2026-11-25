@@ -220,4 +220,20 @@ export class OrdersController {
   ): Promise<Order> {
     return this.ordersService.markAsDeliveredByCourier(courierDeliverDto);
   }
+
+  @Post('admin/expire-receipt-orders')
+  @ApiOperation({
+    summary: 'منقضی کردن سفارش‌های منقضی‌شده فیش (فقط ادمین)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'لیست سفارش‌های منقضی شده',
+    type: [Order],
+  })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.ORDERS_UPDATE)
+  async expireReceiptOrders(): Promise<Order[]> {
+    return this.ordersService.expireOverdueReceiptOrders();
+  }
 }

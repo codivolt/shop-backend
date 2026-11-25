@@ -16,6 +16,7 @@ export enum OrderStatus {
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
   CANCELLED = 'cancelled',
+  FAILED = 'failed',
 }
 
 export enum PaymentStatus {
@@ -91,6 +92,13 @@ export class Order {
   })
   @Column({ type: 'text', nullable: true })
   rejectionReason: string | null;
+
+  @ApiPropertyOptional({
+    example: '2024-01-02T00:00:00Z',
+    description: 'مهلت آخر برای بارگذاری فیش دوباره',
+  })
+  @Column({ type: 'timestamp', nullable: true })
+  receiptDeadline: Date | null;
 
   @ApiProperty({
     example: 'pending',

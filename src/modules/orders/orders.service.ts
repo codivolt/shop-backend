@@ -206,8 +206,12 @@ export class OrdersService {
     if (updatePaymentStatusDto.paymentStatus === PaymentStatus.UNPAID) {
       order.rejectionReason =
         updatePaymentStatusDto.rejectionReason ?? null;
+      const deadline = new Date();
+      deadline.setHours(deadline.getHours() + 24);
+      order.receiptDeadline = deadline;
     } else {
       order.rejectionReason = null;
+      order.receiptDeadline = null;
     }
 
     return this.ordersRepository.save(order);
@@ -309,5 +313,24 @@ export class OrdersService {
 
     order.status = OrderStatus.DELIVERED;
     return this.ordersRepository.save(order);
+  }
+
+  async expireOverdueReceiptOrders(): Promise<Order[]> {
+    const now = new Date();
+    const overdueOrders = await this.ordersRepository.find({
+      where: {
+        paymentStatus: PaymentStatus.UNPAID,
+        receiptDeadline: { $lt: now } as any,
+        status: OrderStatus.PENDING,
+      },
+    });
+
+    const results: Order[] = [];
+    for (const order of overdueOrders) {
+      order.status = OrderStatus.FAILED;
+      results.push(await this.ordersRepository.save(order));
+    }
+
+    return results;
   }
 }
