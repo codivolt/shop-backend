@@ -4,12 +4,13 @@ import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { Order } from './order.entity';
 import { OrderItem } from './order-item.entity';
+import { ReceiptHistory } from './receipt-history.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { DeliveryModule } from '../delivery/delivery.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderItem]),
+    TypeOrmModule.forFeature([Order, OrderItem, ReceiptHistory]),
     NotificationsModule,
     DeliveryModule,
   ],
