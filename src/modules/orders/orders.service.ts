@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { Order, OrderStatus, PaymentStatus } from './order.entity';
 import { OrderItem } from './order-item.entity';
+import { ReceiptHistory, ReceiptHistoryStatus } from './receipt-history.entity';
 import { Address } from '../addresses/address.entity';
 import { Product } from '../products/product.entity';
 import {
@@ -33,6 +34,8 @@ export class OrdersService {
     private readonly ordersRepository: Repository<Order>,
     @InjectRepository(OrderItem)
     private readonly orderItemsRepository: Repository<OrderItem>,
+    @InjectRepository(ReceiptHistory)
+    private readonly receiptHistoryRepository: Repository<ReceiptHistory>,
     private readonly notificationsService: NotificationsService,
     private readonly deliveryService: DeliveryService,
   ) {}
@@ -157,14 +160,14 @@ export class OrdersService {
   findById(id: string): Promise<Order | null> {
     return this.ordersRepository.findOne({
       where: { id },
-      relations: { items: true },
+      relations: { items: true, receiptHistory: true },
     });
   }
 
   findByIdAndUser(id: string, userId: string): Promise<Order | null> {
     return this.ordersRepository.findOne({
       where: { id, userId },
-      relations: { items: true },
+      relations: { items: true, receiptHistory: true },
     });
   }
 
@@ -209,9 +212,41 @@ export class OrdersService {
       const deadline = new Date();
       deadline.setHours(deadline.getHours() + 24);
       order.receiptDeadline = deadline;
+
+      const latestHistory = await this.receiptHistoryRepository.findOne({
+        where: { orderId: order.id },
+        order: { createdAt: 'DESC' },
+      });
+
+      if (latestHistory && latestHistory.status === ReceiptHistoryStatus.PENDING) {
+        latestHistory.status = ReceiptHistoryStatus.REJECTED;
+        latestHistory.rejectionReason = updatePaymentStatusDto.rejectionReason ?? null;
+        latestHistory.reviewedAt = new Date();
+        await this.receiptHistoryRepository.save(latestHistory);
+      } else {
+        const history = this.receiptHistoryRepository.create({
+          orderId: order.id,
+          receiptImageUrl: order.receiptImageUrl,
+          status: ReceiptHistoryStatus.REJECTED,
+          rejectionReason: updatePaymentStatusDto.rejectionReason ?? null,
+          reviewedAt: new Date(),
+        });
+        await this.receiptHistoryRepository.save(history);
+      }
     } else {
       order.rejectionReason = null;
       order.receiptDeadline = null;
+
+      const latestHistory = await this.receiptHistoryRepository.findOne({
+        where: { orderId: order.id },
+        order: { createdAt: 'DESC' },
+      });
+
+      if (latestHistory && latestHistory.status === ReceiptHistoryStatus.PENDING) {
+        latestHistory.status = ReceiptHistoryStatus.APPROVED;
+        latestHistory.reviewedAt = new Date();
+        await this.receiptHistoryRepository.save(latestHistory);
+      }
     }
 
     return this.ordersRepository.save(order);
@@ -224,6 +259,17 @@ export class OrdersService {
     }
 
     order.receiptImageUrl = receiptImageUrl;
+    order.paymentStatus = PaymentStatus.UNPAID;
+    order.rejectionReason = null;
+    order.receiptDeadline = null;
+
+    const history = this.receiptHistoryRepository.create({
+      orderId: order.id,
+      receiptImageUrl,
+      status: ReceiptHistoryStatus.PENDING,
+    });
+    await this.receiptHistoryRepository.save(history);
+
     return this.ordersRepository.save(order);
   }
 
@@ -332,5 +378,12 @@ export class OrdersService {
     }
 
     return results;
+  }
+
+  async getReceiptHistory(orderId: string): Promise<ReceiptHistory[]> {
+    return this.receiptHistoryRepository.find({
+      where: { orderId },
+      order: { createdAt: 'DESC' },
+    });
   }
 }

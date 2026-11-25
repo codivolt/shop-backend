@@ -8,6 +8,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
+import { ReceiptHistory } from './receipt-history.entity';
 import { decimalTransformer } from '../../common/transformers/decimal.transformer';
 
 export enum OrderStatus {
@@ -143,4 +144,11 @@ export class Order {
 
   @OneToMany(() => OrderItem, (item) => item.order)
   items: OrderItem[];
+
+  @ApiPropertyOptional({
+    type: () => ReceiptHistory,
+    description: 'تاریخچه بارگذاری و بررسی فیش پرداخت',
+  })
+  @OneToMany(() => ReceiptHistory, (history) => history.order)
+  receiptHistory: ReceiptHistory[];
 }

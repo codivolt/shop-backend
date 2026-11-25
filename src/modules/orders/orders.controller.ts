@@ -44,6 +44,7 @@ import {
   CourierDeliverDto,
 } from './dto/order.dto';
 import { Order } from './order.entity';
+import { ReceiptHistory } from './receipt-history.entity';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
@@ -235,5 +236,30 @@ export class OrdersController {
   @Permissions(PERMISSIONS.ORDERS_UPDATE)
   async expireReceiptOrders(): Promise<Order[]> {
     return this.ordersService.expireOverdueReceiptOrders();
+  }
+
+  @Get(':id/receipt-history')
+  @ApiOperation({ summary: 'تاریخچه فیش‌های یک سفارش' })
+  @ApiParam({ name: 'id', description: 'شناسه سفارش' })
+  @ApiResponse({
+    status: 200,
+    description: 'تاریخچه فیش‌ها',
+    type: [ReceiptHistory],
+  })
+  @UseGuards(JwtAuthGuard)
+  async getReceiptHistory(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<ReceiptHistory[]> {
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    const order = isAdmin
+      ? await this.ordersService.findById(id)
+      : await this.ordersService.findByIdAndUser(id, user.id);
+
+    if (!order) {
+      throw new NotFoundException('سفارش یافت نشد');
+    }
+
+    return this.ordersService.getReceiptHistory(id);
   }
 }
