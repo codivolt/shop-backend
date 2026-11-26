@@ -52,7 +52,10 @@ export class Order {
   @Column({ type: 'char', length: 36 })
   userId: string;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, {
+    nullable: true,
+    createForeignKeyConstraints: false,
+  })
   @JoinColumn({ name: 'userId' })
   user?: User;
 
