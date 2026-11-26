@@ -12,7 +12,7 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
 
 export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'] as const;
 
-export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+export const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 const MAGIC_BYTES: Record<string, Buffer[]> = {
   'image/jpeg': [Buffer.from([0xff, 0xd8, 0xff])],
@@ -27,7 +27,7 @@ export function validateImageFile(file: Express.Multer.File): void {
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    throw new BadRequestException('حجم فایل نباید بیشتر از 5 مگابایت باشد');
+    throw new BadRequestException('حجم فایل نباید بیشتر از 2 مگابایت باشد');
   }
 
   const extension = extname(file.originalname).toLowerCase();
