@@ -60,11 +60,22 @@ export class OrdersService {
       }
 
       const orderCode = this.generateOrderCode();
+      const customerAddress = [
+        address.addressLine,
+        address.city,
+        address.province,
+        address.postalCode,
+      ]
+        .filter(Boolean)
+        .join('، ');
       const order = manager.create(Order, {
         userId,
         addressId: createOrderDto.addressId,
         totalAmount: 0,
         orderCode,
+        customerName: address.recipientName ?? null,
+        customerPhone: address.phone ?? null,
+        customerAddress: customerAddress || null,
       });
       const savedOrder = await manager.save(order);
 

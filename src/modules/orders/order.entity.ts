@@ -59,6 +59,18 @@ export class Order {
   @JoinColumn({ name: 'userId' })
   user?: User;
 
+  @ApiPropertyOptional({ description: 'نام خریدار (اسنپ‌شات)' })
+  @Column({ type: 'varchar', length: 200, nullable: true })
+  customerName: string | null;
+
+  @ApiPropertyOptional({ description: 'شماره تماس خریدار (اسنپ‌شات)' })
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  customerPhone: string | null;
+
+  @ApiPropertyOptional({ description: 'آدرس خریدار (اسنپ‌شات)' })
+  @Column({ type: 'text', nullable: true })
+  customerAddress: string | null;
+
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440002',
     description: 'شناسه آدرس',
