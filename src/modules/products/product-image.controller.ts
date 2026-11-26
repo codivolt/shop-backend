@@ -7,7 +7,12 @@ import {
   Param,
   Body,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import {
   ApiTags,
   ApiOperation,
@@ -15,6 +20,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { ProductImageService } from './product-image.service';
 import {
@@ -29,17 +35,35 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { UserRole } from '../users/users.entity';
 import { PERMISSIONS } from '../auth/constants';
+import { StorageService } from '../storage/storage.service';
+import {
+  processAndSaveImage,
+  MAX_FILE_SIZE,
+} from '../../common/utils/secure-upload.util';
 
 @ApiTags('تصاویر محصول')
 @ApiBearerAuth('access-token')
 @ApiParam({ name: 'productId', description: 'شناسه محصول' })
 @Controller('products/:productId/images')
 export class ProductImageController {
-  constructor(private readonly imageService: ProductImageService) {}
+  constructor(
+    private readonly imageService: ProductImageService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'افزودن تصویر به محصول (فقط ادمین)' })
-  @ApiBody({ type: CreateProductImageDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        isPrimary: { type: 'boolean' },
+        sortOrder: { type: 'number' },
+      },
+    },
+  })
   @ApiResponse({
     status: 201,
     description: 'تصویر اضافه شد',
@@ -48,11 +72,35 @@ export class ProductImageController {
   @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
   @Roles(UserRole.ADMIN)
   @Permissions(PERMISSIONS.PRODUCTS_CREATE)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
   async create(
     @Param('productId') productId: string,
-    @Body() dto: CreateProductImageDto,
+    @UploadedFile() file?: Express.Multer.File,
+    @Body() dto?: CreateProductImageDto,
   ): Promise<ProductImageResponse> {
-    return this.imageService.create(productId, dto);
+    let imageUrl = dto?.imageUrl;
+    if (file) {
+      const filename = await processAndSaveImage(
+        file,
+        'products',
+        this.storage,
+        { width: 1920, height: 1920 },
+      );
+      imageUrl = `/files/products/${filename}`;
+    }
+    if (!imageUrl) {
+      throw new BadRequestException('فایل تصویر را انتخاب کنید');
+    }
+    return this.imageService.create(productId, {
+      imageUrl,
+      isPrimary: dto?.isPrimary,
+      sortOrder: dto?.sortOrder,
+    });
   }
 
   @Get()
