@@ -321,7 +321,10 @@ export class OrdersService {
 
     const search = query.search?.trim();
     if (search) {
-      qb.andWhere('o.id LIKE :search', { search: `%${search}%` });
+      qb.andWhere(
+        '(o.id LIKE :search OR o.orderCode LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR user.phone LIKE :search)',
+        { search: `%${search}%` },
+      );
     }
 
     return qb.orderBy('o.createdAt', 'DESC').skip(skip).take(limit);
