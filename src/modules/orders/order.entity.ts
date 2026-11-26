@@ -6,9 +6,12 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { OrderItem } from './order-item.entity';
 import { ReceiptHistory } from './receipt-history.entity';
+import { User } from '../users/users.entity';
 import { decimalTransformer } from '../../common/transformers/decimal.transformer';
 
 export enum OrderStatus {
@@ -48,6 +51,10 @@ export class Order {
   })
   @Column({ type: 'char', length: 36 })
   userId: string;
+
+  @ManyToOne(() => User, { nullable: false })
+  @JoinColumn({ name: 'userId' })
+  user?: User;
 
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440002',

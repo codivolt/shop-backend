@@ -304,7 +304,8 @@ export class OrdersService {
   ): SelectQueryBuilder<Order> {
     const qb = this.ordersRepository
       .createQueryBuilder('o')
-      .leftJoinAndSelect('o.items', 'item');
+      .leftJoinAndSelect('o.items', 'item')
+      .leftJoinAndSelect('o.user', 'user');
 
     if (query.userId) {
       qb.andWhere('o.userId = :userId', { userId: query.userId });
