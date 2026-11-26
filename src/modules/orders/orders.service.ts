@@ -160,7 +160,7 @@ export class OrdersService {
   findById(id: string): Promise<Order | null> {
     return this.ordersRepository.findOne({
       where: { id },
-      relations: { items: true, receiptHistory: true },
+      relations: { items: true, receiptHistory: true, user: true },
       order: { receiptHistory: { createdAt: 'DESC' } },
     });
   }
@@ -168,7 +168,7 @@ export class OrdersService {
   findByIdAndUser(id: string, userId: string): Promise<Order | null> {
     return this.ordersRepository.findOne({
       where: { id, userId },
-      relations: { items: true, receiptHistory: true },
+      relations: { items: true, receiptHistory: true, user: true },
       order: { receiptHistory: { createdAt: 'DESC' } },
     });
   }
