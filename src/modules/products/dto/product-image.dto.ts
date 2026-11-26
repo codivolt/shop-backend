@@ -3,12 +3,13 @@ import { Transform, Type } from 'class-transformer';
 import { IsString, IsOptional, IsBoolean, IsInt, Min } from 'class-validator';
 
 export class CreateProductImageDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'https://example.com/image.jpg',
-    description: 'لینک تصویر',
+    description: 'لینک تصویر (در صورت آپلود فایل، خودکار محاسبه می‌شود)',
   })
   @IsString()
-  imageUrl: string;
+  @IsOptional()
+  imageUrl?: string;
 
   @ApiPropertyOptional({ example: false, description: 'تصویر اصلی؟' })
   @Transform(
