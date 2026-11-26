@@ -23,6 +23,9 @@ import { PaymentAccountsModule } from './modules/payment-accounts/payment-accoun
 import { DiscountModule } from './modules/discounts/discount.module';
 import { FilesModule } from './modules/files/files.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { AuditInterceptor } from './modules/audit/audit.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -55,9 +58,11 @@ import { StorageModule } from './modules/storage/storage.module';
     DiscountModule,
     FilesModule,
     StorageModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
     AppService,
     {
       provide: APP_GUARD,
