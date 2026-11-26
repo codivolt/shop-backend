@@ -5,39 +5,25 @@ import {
   Res,
   UseGuards,
   NotFoundException,
-  ForbiddenException,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { join } from 'path';
-import { existsSync } from 'fs';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { User, UserRole } from '../users/users.entity';
+import { User } from '../users/users.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { Permissions } from '../auth/decorators/permissions.decorator';
-import { PERMISSIONS } from '../auth/constants';
-
-const UPLOADS_DIR = join(process.cwd(), 'uploads');
+import { StorageService } from '../storage/storage.service';
 
 @Controller('files')
 export class FilesController {
+  constructor(private readonly storage: StorageService) {}
+
   @Get('avatars/:filename')
   @UseGuards(JwtAuthGuard)
   async serveAvatar(
     @Param('filename') filename: string,
     @Res() res: Response,
-    @CurrentUser() user: User,
+    @CurrentUser() _user: User,
   ): Promise<void> {
-    const filePath = join(UPLOADS_DIR, 'avatars', filename);
-    if (!existsSync(filePath)) {
-      throw new NotFoundException('فایل یافت نشد');
-    }
-
-    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'");
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.sendFile(filePath);
+    await this.serve('avatars', filename, res);
   }
 
   @Get('receipts/:filename')
@@ -45,21 +31,9 @@ export class FilesController {
   async serveReceipt(
     @Param('filename') filename: string,
     @Res() res: Response,
-    @CurrentUser() user: User,
+    @CurrentUser() _user: User,
   ): Promise<void> {
-    const filePath = join(UPLOADS_DIR, 'receipts', filename);
-    if (!existsSync(filePath)) {
-      throw new NotFoundException('فایل یافت نشد');
-    }
-
-    // Users can only access their own receipts unless they're admin
-    // The order service should verify ownership before returning the receipt URL
-    // For additional security, we could check order ownership here
-
-    res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'");
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Content-Disposition', 'inline');
-    res.sendFile(filePath);
+    await this.serve('receipts', filename, res, 'inline');
   }
 
   @Get('products/:filename')
@@ -68,15 +42,34 @@ export class FilesController {
     @Param('filename') filename: string,
     @Res() res: Response,
   ): Promise<void> {
-    const filePath = join(UPLOADS_DIR, 'products', filename);
-    if (!existsSync(filePath)) {
-      throw new NotFoundException('فایل یافت نشد');
-    }
+    await this.serve('products', filename, res, 'inline', true);
+  }
 
-    // Product images are public for display on the web shop
+  @Get('categories/:filename')
+  @Get('uploads/categories/:filename')
+  async serveCategoryImage(
+    @Param('filename') filename: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    await this.serve('categories', filename, res, 'inline', true);
+  }
+
+  private async serve(
+    prefix: string,
+    filename: string,
+    res: Response,
+    disposition = 'inline',
+    cache = false,
+  ): Promise<void> {
+    const buffer = await this.storage.get(`${prefix}/${filename}`);
+
     res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'");
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.sendFile(filePath);
+    res.setHeader('Content-Type', 'image/webp');
+    res.setHeader('Content-Disposition', disposition);
+    if (cache) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+    res.send(buffer);
   }
 }

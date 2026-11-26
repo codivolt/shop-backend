@@ -14,10 +14,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { randomUUID } from 'crypto';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { mkdirSync } from 'fs';
 import {
   ApiTags,
   ApiOperation,
@@ -48,15 +44,16 @@ import { ReceiptHistory } from './receipt-history.entity';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
 import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
-
-const RECEIPT_DIR = join(process.cwd(), 'uploads', 'receipts');
-mkdirSync(RECEIPT_DIR, { recursive: true });
+import { StorageService } from '../storage/storage.service';
 
 @ApiTags('سفارش‌ها')
 @ApiBearerAuth('access-token')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'ایجاد سفارش جدید' })
@@ -175,7 +172,7 @@ export class OrdersController {
 
     validateImageFile(file);
 
-    const filename = await processAndSaveImage(file, RECEIPT_DIR, { width: 1920, height: 1920 });
+    const filename = await processAndSaveImage(file, 'receipts', this.storage, { width: 1920, height: 1920 });
 
     const order =
       user.role === UserRole.ADMIN

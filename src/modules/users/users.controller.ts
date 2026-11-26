@@ -14,10 +14,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { randomUUID } from 'crypto';
-import { mkdirSync } from 'fs';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import { ChangePasswordDto, UpdateProfileDto } from './dto/update-profile.dto';
 import { CreateReferralTierDto, UpdateReferralTierDto } from './dto/referral-tier.dto';
 import {
@@ -44,15 +40,16 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PERMISSIONS } from '../auth/constants';
 import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
-
-const AVATAR_DIR = join(process.cwd(), 'uploads', 'avatars');
-mkdirSync(AVATAR_DIR, { recursive: true });
+import { StorageService } from '../storage/storage.service';
 
 @ApiTags('کاربران')
 @ApiBearerAuth('access-token')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'ثبت نام کاربر (عمومی)' })
@@ -144,10 +141,10 @@ export class UsersController {
 
     validateImageFile(file);
 
-    const filename = await processAndSaveImage(file, AVATAR_DIR, { width: 512, height: 512 });
+    const filename = await processAndSaveImage(file, 'avatars', this.storage, { width: 512, height: 512 });
 
     return this.usersService.updateProfile(user.id, {
-      avatarUrl: `/uploads/avatars/${filename}`,
+      avatarUrl: `/files/avatars/${filename}`,
     });
   }
 

@@ -13,10 +13,6 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { randomUUID } from 'crypto';
-import { mkdirSync } from 'fs';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
 import {
   ApiTags,
   ApiOperation,
@@ -40,15 +36,16 @@ import { Permissions } from '../auth/decorators/permissions.decorator';
 import { UserRole } from '../users/users.entity';
 import { PERMISSIONS } from '../auth/constants';
 import { validateImageFile, processAndSaveImage, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
-
-const PRODUCT_IMAGE_DIR = join(process.cwd(), 'uploads', 'products');
-mkdirSync(PRODUCT_IMAGE_DIR, { recursive: true });
+import { StorageService } from '../storage/storage.service';
 
 @ApiTags('محصولات')
 @ApiBearerAuth('access-token')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'ایجاد محصول جدید (فقط ادمین)' })
@@ -161,7 +158,7 @@ export class ProductsController {
 
     validateImageFile(file);
 
-    const filename = await processAndSaveImage(file, PRODUCT_IMAGE_DIR, { width: 1920, height: 1920 });
+    const filename = await processAndSaveImage(file, 'products', this.storage, { width: 1920, height: 1920 });
 
     return { imageUrl: `/files/products/${filename}` };
   }

@@ -13,10 +13,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { randomUUID } from 'crypto';
-import { mkdirSync } from 'fs';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { memoryStorage } from 'multer';
 import {
   ApiTags,
   ApiOperation,
@@ -39,15 +36,17 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { UserRole } from '../users/users.entity';
 import { PERMISSIONS } from '../auth/constants';
-
-const CATEGORY_IMAGE_DIR = join(process.cwd(), 'uploads', 'categories');
-mkdirSync(CATEGORY_IMAGE_DIR, { recursive: true });
+import { processAndSaveImage, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
+import { StorageService } from '../storage/storage.service';
 
 @ApiTags('دسته‌بندی‌ها')
 @ApiBearerAuth('access-token')
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly storage: StorageService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'ایجاد دسته‌بندی جدید (فقط ادمین)' })
@@ -140,16 +139,8 @@ export class CategoriesController {
   @Permissions(PERMISSIONS.CATEGORIES_CREATE)
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: CATEGORY_IMAGE_DIR,
-        filename: (_request, file, callback) => {
-          callback(
-            null,
-            `${randomUUID()}${extname(file.originalname).toLowerCase()}`,
-          );
-        },
-      }),
-      limits: { fileSize: 5 * 1024 * 1024 },
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_FILE_SIZE },
       fileFilter: (_request, file, callback) => {
         if (!file.mimetype.startsWith('image/')) {
           callback(new BadRequestException('فقط فایل تصویری مجاز است'), false);
@@ -165,6 +156,10 @@ export class CategoriesController {
     if (!file) {
       throw new BadRequestException('فایل تصویر را انتخاب کنید');
     }
-    return { imageUrl: `/uploads/categories/${file.filename}` };
+    const filename = await processAndSaveImage(file, 'categories', this.storage, {
+      width: 1920,
+      height: 1920,
+    });
+    return { imageUrl: `/files/categories/${filename}` };
   }
 }

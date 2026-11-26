@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import sharp from 'sharp';
+import type { StorageService } from '../../modules/storage/storage.service';
 
 export const ALLOWED_IMAGE_MIME_TYPES = [
   'image/jpeg',
@@ -49,30 +49,33 @@ export function validateImageFile(file: Express.Multer.File): void {
 
 export async function processAndSaveImage(
   file: Express.Multer.File,
-  uploadDir: string,
+  prefix: string,
+  storage: StorageService,
   options: { width?: number; height?: number; quality?: number } = {},
 ): Promise<string> {
   validateImageFile(file);
 
-  if (!existsSync(uploadDir)) {
-    mkdirSync(uploadDir, { recursive: true });
-  }
-
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.webp`;
-  const outputPath = join(uploadDir, filename);
 
-  await sharp(file.buffer)
+  const buffer = await sharp(file.buffer)
     .rotate()
     .resize(options.width, options.height, { fit: 'inside', withoutEnlargement: true })
     .webp({ quality: options.quality ?? 85 })
-    .toFile(outputPath);
+    .toBuffer();
+
+  await storage.upload(`${prefix}/${filename}`, buffer, 'image/webp');
 
   return filename;
 }
 
-export function deleteFile(uploadDir: string, filename: string): void {
-  const filePath = join(uploadDir, filename);
-  if (existsSync(filePath)) {
-    unlinkSync(filePath);
+export async function deleteFile(
+  prefix: string,
+  filename: string,
+  storage: StorageService,
+): Promise<void> {
+  try {
+    await storage.delete(`${prefix}/${filename}`);
+  } catch {
+    // ignore deletion errors
   }
 }

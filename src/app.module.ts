@@ -22,6 +22,7 @@ import { DeliveryModule } from './modules/delivery/delivery.module';
 import { PaymentAccountsModule } from './modules/payment-accounts/payment-accounts.module';
 import { DiscountModule } from './modules/discounts/discount.module';
 import { FilesModule } from './modules/files/files.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { FilesModule } from './modules/files/files.module';
     PaymentAccountsModule,
     DiscountModule,
     FilesModule,
+    StorageModule,
   ],
   controllers: [AppController],
   providers: [
