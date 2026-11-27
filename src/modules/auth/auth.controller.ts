@@ -1,4 +1,5 @@
-import { Controller, Post, Body, UseGuards, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, HttpCode, HttpStatus, Req, Res, UnauthorizedException } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -14,6 +15,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../users/users.entity';
 import { SendCodeDto, VerifyCodeDto } from './dto/phone-auth.dto';
+import { REFRESH_COOKIE, parseCookies, setRefreshCookie, clearRefreshCookie } from './cookie.util';
 
 @ApiTags('احراز هویت')
 @Controller('auth')
@@ -30,8 +32,14 @@ export class AuthController {
     type: AuthResponse,
   })
   @ApiResponse({ status: 409, description: 'ایمیل تکراری است' })
-  async register(@Body() registerDto: RegisterDto): Promise<AuthResponse> {
-    return this.authService.register(registerDto);
+  async register(
+    @Body() registerDto: RegisterDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AuthResponse> {
+    const result = await this.authService.register(registerDto);
+    setRefreshCookie(res, result.refresh_token!);
+    delete result.refresh_token;
+    return result;
   }
 
   @Post('login')
@@ -48,8 +56,12 @@ export class AuthController {
   async login(
     @Body() _loginDto: LoginDto,
     @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    return this.authService.login(user);
+    const result = await this.authService.login(user);
+    setRefreshCookie(res, result.refresh_token!);
+    delete result.refresh_token;
+    return result;
   }
 
   @Post('send-code')
@@ -73,8 +85,12 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'کد تایید اشتباه یا منقضی شده است' })
   async verifyCode(
     @Body() verifyCodeDto: VerifyCodeDto,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    return this.authService.verifyCode(verifyCodeDto);
+    const result = await this.authService.verifyCode(verifyCodeDto);
+    setRefreshCookie(res, result.refresh_token!);
+    delete result.refresh_token;
+    return result;
   }
 
   @Post('refresh')
@@ -95,8 +111,20 @@ export class AuthController {
     type: AuthResponse,
   })
   @ApiResponse({ status: 401, description: 'توکن تازه‌سازی نامعتبر است' })
-  async refresh(@Body() body: { refresh_token: string }): Promise<AuthResponse> {
-    return this.authService.refreshTokens(body.refresh_token);
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+    @Body() body?: { refresh_token?: string },
+  ): Promise<AuthResponse> {
+    const cookieToken = parseCookies(req.headers.cookie)[REFRESH_COOKIE];
+    const token = cookieToken || body?.refresh_token;
+    if (!token) {
+      throw new UnauthorizedException('توکن تازه‌سازی نامعتبر یا منقضی شده است');
+    }
+    const result = await this.authService.refreshTokens(token);
+    setRefreshCookie(res, result.refresh_token!);
+    delete result.refresh_token;
+    return result;
   }
 
   @Post('logout')
@@ -105,8 +133,12 @@ export class AuthController {
   @ApiBearerAuth('access-token')
   @UseGuards(JwtAuthGuard)
   @ApiResponse({ status: 200, description: 'با موفقیت خارج شدید' })
-  async logout(@CurrentUser() user: User): Promise<{ message: string }> {
+  async logout(
+    @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
     await this.authService.logout(user.id);
+    clearRefreshCookie(res);
     return { message: 'با موفقیت خارج شدید' };
   }
 

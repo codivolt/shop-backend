@@ -17,7 +17,7 @@ export class RefreshToken {
   @Column({ type: 'char', length: 36 })
   userId: string;
 
-  @Column({ type: 'varchar', length: 255, select: false })
+  @Column({ type: 'varchar', length: 255 })
   tokenHash: string;
 
   @Column({ type: 'timestamp' })

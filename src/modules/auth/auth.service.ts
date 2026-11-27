@@ -9,7 +9,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
-import * as bcrypt from 'bcryptjs';
 import { UsersService } from '../users/users.service';
 import { PermissionsService } from '../permissions/permissions.service';
 import { RegisterDto, AuthResponse } from './dto/auth.dto';
@@ -180,11 +179,9 @@ export class AuthService {
 
     // Generate refresh token
     const refreshToken = crypto.randomBytes(64).toString('hex');
-    const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
-
     const refreshTokenEntity = this.refreshTokensRepository.create({
       userId: user.id,
-      tokenHash: refreshTokenHash,
+      tokenHash: refreshToken,
       expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
     });
     await this.refreshTokensRepository.save(refreshTokenEntity);
