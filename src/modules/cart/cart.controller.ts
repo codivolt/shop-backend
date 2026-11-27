@@ -16,8 +16,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { CartService } from './cart.service';
-import { AddToCartDto, UpdateCartItemDto } from './dto/cart.dto';
-import { CartItemResponse } from './dto/cart.dto';
+import { AddToCartDto, UpdateCartItemDto, CartItemResponse } from './dto/cart.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/users.entity';

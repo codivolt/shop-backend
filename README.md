@@ -1,100 +1,146 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Shop Backend (NestJS)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend API for the **Rolchi** e-commerce platform. Built with **NestJS + TypeORM (MySQL) + Redis + MinIO**, JWT auth, throttling, Swagger, audit logging and object storage.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 1. Tech Stack
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Concern | Choice |
+| --- | --- |
+| Runtime | Node.js + TypeScript |
+| Framework | NestJS 10 (Express) |
+| ORM / DB | TypeORM + **MySQL** (`mysql2`) |
+| Cache / sessions | Redis (`ioredis`, `cache-manager-redis-store`) |
+| Object storage | **MinIO** (S3-compatible) via `minio` |
+| Auth | JWT (`@nestjs/jwt`, Passport JWT), `bcryptjs` |
+| Validation | `class-validator` + `class-transformer` |
+| API docs | Swagger (`@nestjs/swagger`) |
+| Rate limiting | `@nestjs/throttler` |
+| Image processing | `sharp` (resize → webp) |
+| File uploads | `multer` (memoryStorage) |
+| Tests | Jest (unit / integration / e2e projects) |
+| Seed | `ts-node` script (`src/seed`) |
 
-## Project setup
+---
 
-```bash
-$ pnpm install
+## 2. Architecture
+
+```
+src/
+├── main.ts                 # bootstrap (global prefix: none, CORS, Swagger in non-prod)
+├── app.module.ts           # root module (AuditModule + global AuditInterceptor + ThrottlerGuard)
+├── config/                 # jwt.config.ts, etc.
+├── common/
+│   ├── decorators/         # @CurrentUser, @Permissions, @Roles, @Public
+│   ├── dto/                # PaginationDto, PaginatedResponse
+│   ├── filters/            # global exception filter
+│   ├── transformers/       # column transformers
+│   └── utils/              # secure-upload.util.ts (validate/process/delete, 2MB limit)
+├── modules/                # feature modules (see below)
+├── migrations/             # TypeORM migrations
+└── seed/                   # seed.main.ts + seed.service.ts (admin, categories, etc.)
 ```
 
-## Compile and run the project
+### Modules (`src/modules`)
+`auth`, `users`, `permissions`, `products`, `categories` (+ category-attributes), `brands`, `orders`, `discounts`, `delivery`, `payment-accounts`, `payments`, `cart`, `addresses`, `notifications`, `search`, `audit`, `files`, `storage`.
+
+Each module follows the Nest convention: `*.module.ts`, `*.controller.ts`, `*.service.ts`, `*.entity.ts`, `dto/`.
+
+---
+
+## 3. Environment Variables (`.env.local`)
+
+| Key | Description |
+| --- | --- |
+| `PORT` | HTTP port (default `3000`) |
+| `DB_HOST` / `DB_PORT` | MySQL host/port (`localhost` / `3306`) |
+| `DB_USERNAME` / `DB_PASSWORD` | MySQL credentials |
+| `DB_DATABASE` | Database name (`shop_db`) |
+| `DB_SYNC` | TypeORM `synchronize` (`true` in dev, **disable in prod**) |
+| `DB_LOGGING` | TypeORM query logging |
+| `JWT_SECRET` | JWT signing secret (**≥ 32 chars**) |
+| `JWT_EXPIRES_IN` | Access token TTL (`15m`) |
+| `CORS_ORIGINS` | Allowed origins (comma separated) |
+| `MINIO_ENDPOINT` / `MINIO_PORT` / `MINIO_USE_SSL` | MinIO connection |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | MinIO credentials |
+| `MINIO_BUCKET` | Bucket name (auto-created on boot) |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PHONE` / `SEED_ADMIN_PASSWORD` | Seed admin account |
+
+> Secrets are read from `.env.local` and must not be committed.
+
+---
+
+## 4. Scripts
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
+pnpm run start:dev        # watch mode (port 3000)
+pnpm run build            # nest build
+pnpm run start:prod       # node dist/main
+pnpm run lint             # eslint --fix
+pnpm run test             # unit tests
+pnpm run test:integration # integration tests
+pnpm run test:e2e         # e2e tests
+pnpm run test:cov         # coverage
+pnpm run seed             # seed database (admin, base data)
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ pnpm run test
+## 5. Key Features & Behaviour
 
-# e2e tests
-$ pnpm run test:e2e
+### Auth
+- Login **is** registration: `POST /auth/login` verifies the code/password and **auto-creates** a user via `createByPhone` if absent.
+- JWT access token returned with `user` (role + permissions).
+- Guards: `JwtAuthGuard`, `RolesGuard`, `PermissionsGuard`; `@Public`, `@Roles`, `@Permissions` decorators.
 
-# test coverage
-$ pnpm run test:cov
-```
+### Products
+- CRUD, `isFeatured` flag, `GET /products/featured/list`.
+- Multi-image gallery: `POST /products/:id/images` (multipart, appends to gallery, first becomes primary).
+- Price always read from DB (never trusted from client).
 
-## Deployment
+### Categories / Attributes / Brands
+- Category tree + category attributes CRUD.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Orders
+- Price snapshot + **customer snapshot** (`customerName`, `customerPhone`, `customerAddress`) at creation.
+- `user` relation included with `createForeignKeyConstraints:false` (legacy orders with empty `userId` don’t break).
+- Search by id / code / customer name / phone / user fields (`search` from `PaginationDto`).
+- Receipt workflow: `card_to_card`, `sheba`, `crypto` require a receipt; approve/reject with reason; 24h rejection deadline; re-upload after rejection; `ReceiptHistory` (sorted `createdAt DESC`).
+- Receipt paths normalized `/uploads/receipts/` → `/files/receipts/`.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Referral
+- Auto 8-char referral codes, `ReferralTier`, `DiscountCode`.
+- `getReferralStats` uses an explicit `leftJoin('User','referred','referred.referredBy = referrer.referralCode')`.
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
+### Discounts / Delivery / Payment accounts / Cart / Addresses / Notifications / Search
+- Standard CRUD + validation; search endpoint `GET /search?q=`.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Audit logging
+- `audit_logs` entity + `AuditInterceptor` (global) records POST/PUT/PATCH/DELETE; `GET /audit-logs` (admin).
 
-## Resources
+### Files & Storage
+- `FilesController` streams avatars/receipts/products/categories from MinIO with CSP + `X-Content-Type-Options`; JWT guard on avatars/receipts.
+- `StorageService` wraps MinIO (`upload/get/delete/stat`, bucket auto-create).
+- Upload pipeline: `validateImageFile` → `processAndSaveImage` (sharp → webp 512×512 or 1920×1920) → `deleteFile` on error. `MAX_FILE_SIZE` = 2MB.
 
-Check out a few resources that may come in handy when working with NestJS:
+### Cross-cutting
+- Global throttling 100 req / 60s (Persian message).
+- No global API prefix; CORS throws if empty; Swagger disabled in production.
+- `onDelete: 'RESTRICT'` with app-layer cleanup.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## 6. Testing
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Jest projects defined in `jest.config.js`: `unit`, `integration`, `e2e`. Specs live next to sources (`*.service.spec.ts`, `*.controller.spec.ts`). Run a single project with `pnpm run test:unit` etc.
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 7. Deployment Notes
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-# shop-back
-# shop-backend
+- Set `DB_SYNC=false`, provide a real `JWT_SECRET`, configure `CORS_ORIGINS` and MinIO credentials.
+- Run migrations (`src/migrations`) instead of relying on `synchronize`.
+- Build with `pnpm run build`, start with `pnpm run start:prod`.
+- Place behind nginx; expose only the API port.

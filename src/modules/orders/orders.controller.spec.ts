@@ -7,8 +7,7 @@ import {
 import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { Order, OrderStatus } from './order.entity';
-import { CreateOrderDto, UpdateOrderStatusDto } from './dto/order.dto';
-import { OrderQueryDto } from './dto/order.dto';
+import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './dto/order.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import {
   createTestOrder,

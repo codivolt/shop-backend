@@ -43,7 +43,7 @@ import { Order } from './order.entity';
 import { ReceiptHistory } from './receipt-history.entity';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
-import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
+import { validateImageFile, processAndSaveImage, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
 import { StorageService } from '../storage/storage.service';
 
 @ApiTags('سفارش‌ها')

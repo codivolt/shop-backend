@@ -4,7 +4,6 @@ import {
   Param,
   Res,
   UseGuards,
-  NotFoundException,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';

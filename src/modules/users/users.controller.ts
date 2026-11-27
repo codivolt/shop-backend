@@ -39,7 +39,7 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { PERMISSIONS } from '../auth/constants';
-import { validateImageFile, processAndSaveImage, ALLOWED_IMAGE_EXTENSIONS, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
+import { validateImageFile, processAndSaveImage, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
 import { StorageService } from '../storage/storage.service';
 
 @ApiTags('کاربران')

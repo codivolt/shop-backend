@@ -13,8 +13,7 @@ import { User } from '../users/users.entity';
 import { Product } from '../products/product.entity';
 import { CartItem } from '../cart/cart-item.entity';
 import { DeliveryMethod } from '../delivery/delivery-method.entity';
-import { CreateOrderDto, UpdateOrderStatusDto } from './dto/order.dto';
-import { OrderQueryDto } from './dto/order.dto';
+import { CreateOrderDto, UpdateOrderStatusDto, OrderQueryDto } from './dto/order.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { createMockRepository } from '../../../test/utils/mock-helpers';
 import {

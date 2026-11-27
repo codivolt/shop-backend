@@ -8,7 +8,6 @@ import {
   ValidateNested,
   IsOptional,
   IsEnum,
-  IsNumber,
   IsInt,
   Min,
 } from 'class-validator';

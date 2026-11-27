@@ -3,10 +3,8 @@ import {
   ApiTags,
   ApiOperation,
   ApiBearerAuth,
-  ApiResponse,
 } from '@nestjs/swagger';
-import { AuditLogService } from './audit-log.service';
-import type { AuditLogQuery } from './audit-log.service';
+import { AuditLogService, type AuditLogQuery } from './audit-log.service';
 import { AuditLog } from './audit-log.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
