@@ -12,6 +12,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { ProductImageModule } from './modules/products/product-image.module';
 import { ProductAttributeValueModule } from './modules/products/product-attribute-value.module';
 import { CartModule } from './modules/cart/cart.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { BrandsModule } from './modules/brands/brands.module';
@@ -36,7 +37,8 @@ import { AuditInterceptor } from './modules/audit/audit.interceptor';
           limit: 100,
         },
       ],
-      errorMessage: 'تعداد درخواست‌های شما بیش از حد مجاز است. لطفا بعدا تلاش کنید.',
+      errorMessage:
+        'تعداد درخواست‌های شما بیش از حد مجاز است. لطفا بعدا تلاش کنید.',
     }),
     UsersModule,
     AuthModule,
@@ -46,6 +48,7 @@ import { AuditInterceptor } from './modules/audit/audit.interceptor';
     ProductImageModule,
     ProductAttributeValueModule,
     CartModule,
+    FavoritesModule,
     AddressesModule,
     OrdersModule,
     BrandsModule,
