@@ -345,3 +345,7 @@ export const createMockRequest = (user?: User) => ({
   method: 'GET',
   url: '/api/test',
 });
+
+export const createMockUser = createTestUser;
+export const createMockAdmin = createTestAdmin;
+export const createMockSuperAdmin = createTestSuperAdmin;

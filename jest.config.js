@@ -28,6 +28,7 @@ module.exports = {
         '^@nestjs/cache-manager$': '<rootDir>/test/mocks/nestjs-cache-manager.mock.ts',
         '^@nestjs/passport$': '<rootDir>/test/mocks/nestjs-passport.mock.ts',
         '^@nestjs/jwt$': '<rootDir>/test/mocks/nestjs-jwt.mock.ts',
+        '^@nestjs/config$': '<rootDir>/test/mocks/nestjs-config.mock.ts',
       },
       collectCoverageFrom: [
         'src/**/*.ts',
@@ -66,6 +67,7 @@ module.exports = {
         '^@nestjs/cache-manager$': '<rootDir>/test/mocks/nestjs-cache-manager.mock.ts',
         '^@nestjs/passport$': '<rootDir>/test/mocks/nestjs-passport.mock.ts',
         '^@nestjs/jwt$': '<rootDir>/test/mocks/nestjs-jwt.mock.ts',
+        '^@nestjs/config$': '<rootDir>/test/mocks/nestjs-config.mock.ts',
       },
       coverageDirectory: '../coverage/integration',
       setupFilesAfterEnv: ['<rootDir>/test/setup/integration.setup.ts'],
@@ -98,6 +100,7 @@ module.exports = {
         '^@nestjs/cache-manager$': '<rootDir>/test/mocks/nestjs-cache-manager.mock.ts',
         '^@nestjs/passport$': '<rootDir>/test/mocks/nestjs-passport.mock.ts',
         '^@nestjs/jwt$': '<rootDir>/test/mocks/nestjs-jwt.mock.ts',
+        '^@nestjs/config$': '<rootDir>/test/mocks/nestjs-config.mock.ts',
       },
       coverageDirectory: '../coverage/e2e',
       setupFilesAfterEnv: ['<rootDir>/test/setup/e2e.setup.ts'],

@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { DataSource, LessThan, Repository, SelectQueryBuilder } from 'typeorm';
 import { Order, OrderStatus, PaymentStatus } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { ReceiptHistory, ReceiptHistoryStatus } from './receipt-history.entity';
@@ -220,49 +220,64 @@ export class OrdersService {
     order.paymentStatus = updatePaymentStatusDto.paymentStatus;
 
     if (updatePaymentStatusDto.paymentStatus === PaymentStatus.UNPAID) {
-      order.rejectionReason =
-        updatePaymentStatusDto.rejectionReason ?? null;
       const deadline = new Date();
       deadline.setHours(deadline.getHours() + 24);
+      order.rejectionReason = updatePaymentStatusDto.rejectionReason ?? null;
       order.receiptDeadline = deadline;
-
-      const latestHistory = await this.receiptHistoryRepository.findOne({
-        where: { orderId: order.id },
-        order: { createdAt: 'DESC' },
-      });
-
-      if (latestHistory && latestHistory.status === ReceiptHistoryStatus.PENDING) {
-        latestHistory.status = ReceiptHistoryStatus.REJECTED;
-        latestHistory.rejectionReason = updatePaymentStatusDto.rejectionReason ?? null;
-        latestHistory.reviewedAt = new Date();
-        await this.receiptHistoryRepository.save(latestHistory);
-      } else {
-        const history = this.receiptHistoryRepository.create({
-          orderId: order.id,
-          receiptImageUrl: order.receiptImageUrl,
-          status: ReceiptHistoryStatus.REJECTED,
-          rejectionReason: updatePaymentStatusDto.rejectionReason ?? null,
-          reviewedAt: new Date(),
-        });
-        await this.receiptHistoryRepository.save(history);
-      }
+      await this.rejectPendingReceipt(
+        order,
+        updatePaymentStatusDto.rejectionReason ?? null,
+      );
     } else {
       order.rejectionReason = null;
       order.receiptDeadline = null;
-
-      const latestHistory = await this.receiptHistoryRepository.findOne({
-        where: { orderId: order.id },
-        order: { createdAt: 'DESC' },
-      });
-
-      if (latestHistory && latestHistory.status === ReceiptHistoryStatus.PENDING) {
-        latestHistory.status = ReceiptHistoryStatus.APPROVED;
-        latestHistory.reviewedAt = new Date();
-        await this.receiptHistoryRepository.save(latestHistory);
-      }
+      await this.approvePendingReceipt(order.id);
     }
 
     return this.ordersRepository.save(order);
+  }
+
+  private findLatestReceiptHistory(
+    orderId: string,
+  ): Promise<ReceiptHistory | null> {
+    return this.receiptHistoryRepository.findOne({
+      where: { orderId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /** Reject the newest pending receipt, or record the rejection when none is pending. */
+  private async rejectPendingReceipt(
+    order: Order,
+    rejectionReason: string | null,
+  ): Promise<void> {
+    const latest = await this.findLatestReceiptHistory(order.id);
+
+    if (latest && latest.status === ReceiptHistoryStatus.PENDING) {
+      latest.status = ReceiptHistoryStatus.REJECTED;
+      latest.rejectionReason = rejectionReason;
+      latest.reviewedAt = new Date();
+      await this.receiptHistoryRepository.save(latest);
+      return;
+    }
+
+    const history = this.receiptHistoryRepository.create({
+      orderId: order.id,
+      receiptImageUrl: order.receiptImageUrl,
+      status: ReceiptHistoryStatus.REJECTED,
+      rejectionReason,
+      reviewedAt: new Date(),
+    });
+    await this.receiptHistoryRepository.save(history);
+  }
+
+  private async approvePendingReceipt(orderId: string): Promise<void> {
+    const latest = await this.findLatestReceiptHistory(orderId);
+    if (!latest || latest.status !== ReceiptHistoryStatus.PENDING) return;
+
+    latest.status = ReceiptHistoryStatus.APPROVED;
+    latest.reviewedAt = new Date();
+    await this.receiptHistoryRepository.save(latest);
   }
 
   async updateReceipt(id: string, receiptImageUrl: string): Promise<Order> {
@@ -383,7 +398,7 @@ export class OrdersService {
     const overdueOrders = await this.ordersRepository.find({
       where: {
         paymentStatus: PaymentStatus.UNPAID,
-        receiptDeadline: { $lt: now } as any,
+        receiptDeadline: LessThan(now),
         status: OrderStatus.PENDING,
       },
     });
