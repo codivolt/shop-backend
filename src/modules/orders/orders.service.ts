@@ -333,7 +333,7 @@ export class OrdersService {
     const search = query.search?.trim();
     if (search) {
       qb.andWhere(
-        '(o.id LIKE :search OR o.orderCode LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR user.phone LIKE :search)',
+        '(o.id LIKE :search OR o.orderCode LIKE :search OR o.customerName LIKE :search OR o.customerPhone LIKE :search OR user.firstName LIKE :search OR user.lastName LIKE :search OR user.phone LIKE :search)',
         { search: `%${search}%` },
       );
     }
