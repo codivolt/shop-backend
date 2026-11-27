@@ -8,10 +8,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { User, UserRole } from './users.entity';
 import { ReferralTier } from './referral-tier.entity';
+import { RefreshToken } from '../auth/refresh-token.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { ChangePasswordDto, UpdateProfileDto } from './dto/update-profile.dto';
-import { CreateReferralTierDto, UpdateReferralTierDto } from './dto/referral-tier.dto';
+import {
+  CreateReferralTierDto,
+  UpdateReferralTierDto,
+} from './dto/referral-tier.dto';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import {
   buildPaginatedResponse,
@@ -25,6 +29,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(ReferralTier)
     private referralTierRepository: Repository<ReferralTier>,
+    @InjectRepository(RefreshToken)
+    private refreshTokensRepository: Repository<RefreshToken>,
   ) {}
 
   async create(
@@ -173,6 +179,16 @@ export class UsersService {
       );
     }
 
+    if (
+      user.role === UserRole.SUPER_ADMIN &&
+      data.isActive === false &&
+      currentUserRole !== UserRole.SUPER_ADMIN
+    ) {
+      throw new BadRequestException(
+        'فقط مدیر فوق العاده می‌تواند حساب مدیر فوق العاده را غیرفعال کند',
+      );
+    }
+
     this.usersRepository.merge(user, data);
     return this.stripPassword(await this.usersRepository.save(user));
   }
@@ -251,6 +267,15 @@ export class UsersService {
     user.password = dto.newPassword;
     user.passwordSetAt = new Date();
     await this.usersRepository.save(user);
+
+    await this.usersRepository.increment({ id }, 'tokenVersion', 1);
+    await this.refreshTokensRepository.delete({ userId: id });
+  }
+
+  async ownsAvatar(userId: string, filename: string): Promise<boolean> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user?.avatarUrl) return false;
+    return user.avatarUrl.endsWith('/files/avatars/' + filename);
   }
 
   async markPasswordNotSet(id: string): Promise<void> {
@@ -315,7 +340,7 @@ export class UsersService {
     }>;
   }> {
     const totalUsers = await this.usersRepository.count();
-    
+
     const usersWithReferrals = await this.usersRepository
       .createQueryBuilder('u')
       .where('u.referredBy IS NOT NULL')
@@ -323,7 +348,11 @@ export class UsersService {
 
     const totalReferrals = await this.usersRepository
       .createQueryBuilder('referrer')
-      .leftJoin('User', 'referred', 'referred.referredBy = referrer.referralCode')
+      .leftJoin(
+        'User',
+        'referred',
+        'referred.referredBy = referrer.referralCode',
+      )
       .select('referrer.id', 'id')
       .addSelect('referrer.firstName', 'firstName')
       .addSelect('referrer.lastName', 'lastName')
@@ -360,7 +389,10 @@ export class UsersService {
     return this.referralTierRepository.save(tier);
   }
 
-  async updateReferralTier(id: string, data: UpdateReferralTierDto): Promise<ReferralTier> {
+  async updateReferralTier(
+    id: string,
+    data: UpdateReferralTierDto,
+  ): Promise<ReferralTier> {
     const tier = await this.referralTierRepository.findOne({ where: { id } });
     if (!tier) {
       throw new NotFoundException('سطح رفرال یافت نشد');

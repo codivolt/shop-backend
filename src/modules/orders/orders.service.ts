@@ -1,10 +1,12 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, LessThan, Repository, SelectQueryBuilder } from 'typeorm';
+import * as crypto from 'crypto';
 import { Order, OrderStatus, PaymentStatus } from './order.entity';
 import { OrderItem } from './order-item.entity';
 import { ReceiptHistory, ReceiptHistoryStatus } from './receipt-history.entity';
@@ -16,6 +18,7 @@ import {
   UpdateOrderStatusDto,
   UpdatePaymentStatusDto,
   CourierDeliverDto,
+  AssignCourierDto,
 } from './dto/order.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
@@ -45,7 +48,7 @@ export class OrdersService {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const random = crypto.randomBytes(6).toString('hex').toUpperCase();
     return `ORD-${year}${month}${day}-${random}`;
   }
 
@@ -92,9 +95,7 @@ export class OrdersService {
           throw new NotFoundException('محصول سفارش یافت نشد');
         }
         if (!product.isActive) {
-          throw new BadRequestException(
-            `محصول «${product.name}» غیرفعال است`,
-          );
+          throw new BadRequestException(`محصول «${product.name}» غیرفعال است`);
         }
         if (product.stock < itemDto.quantity) {
           throw new BadRequestException(
@@ -373,8 +374,18 @@ export class OrdersService {
       .getMany();
   }
 
+  async assignCourier(id: string, dto: AssignCourierDto): Promise<Order> {
+    const order = await this.findById(id);
+    if (!order) {
+      throw new NotFoundException('سفارش یافت نشد');
+    }
+    order.courierId = dto.courierId;
+    return this.ordersRepository.save(order);
+  }
+
   async markAsDeliveredByCourier(
     courierDeliverDto: CourierDeliverDto,
+    courierId: string,
   ): Promise<Order> {
     const order = await this.findByOrderCode(courierDeliverDto.orderCode);
     if (!order) {
@@ -389,8 +400,33 @@ export class OrdersService {
       throw new BadRequestException('این سفارش لغو شده است');
     }
 
+    if (!order.courierId || order.courierId !== courierId) {
+      throw new ForbiddenException('این سفارش به شما تخصیص داده نشده است');
+    }
+
+    if (
+      order.status !== OrderStatus.SHIPPED ||
+      order.paymentStatus !== PaymentStatus.PAID
+    ) {
+      throw new BadRequestException('سفارش قابل تحویل نیست');
+    }
+
     order.status = OrderStatus.DELIVERED;
     return this.ordersRepository.save(order);
+  }
+
+  async ownsReceipt(userId: string, filename: string): Promise<boolean> {
+    const order = await this.ordersRepository
+      .createQueryBuilder('order')
+      .where('order.userId = :userId', { userId })
+      .andWhere(
+        '(order.receiptImageUrl LIKE :file OR EXISTS (SELECT 1 FROM receipt_history rh WHERE rh.orderId = order.id AND rh.receiptImageUrl LIKE :file))',
+        {
+          file: '%' + filename,
+        },
+      )
+      .getOne();
+    return Boolean(order);
   }
 
   async expireOverdueReceiptOrders(): Promise<Order[]> {

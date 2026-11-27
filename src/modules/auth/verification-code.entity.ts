@@ -21,6 +21,9 @@ export class VerificationCode {
   @Column({ type: 'timestamp' })
   expiresAt: Date;
 
+  @Column({ type: 'int', default: 0 })
+  attempts: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -38,12 +38,17 @@ import {
   UpdateOrderStatusDto,
   UpdatePaymentStatusDto,
   CourierDeliverDto,
+  AssignCourierDto,
 } from './dto/order.dto';
 import { Order } from './order.entity';
 import { ReceiptHistory } from './receipt-history.entity';
 import { PaginatedResponse } from '../../common/dto/pagination.dto';
 import { ApiPaginatedResponse } from '../../common/decorators/api-paginated-response.decorator';
-import { validateImageFile, processAndSaveImage, MAX_FILE_SIZE } from '../../common/utils/secure-upload.util';
+import {
+  validateImageFile,
+  processAndSaveImage,
+  MAX_FILE_SIZE,
+} from '../../common/utils/secure-upload.util';
 import { StorageService } from '../storage/storage.service';
 
 @ApiTags('سفارش‌ها')
@@ -99,11 +104,11 @@ export class OrdersController {
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<Order> {
-    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
-    const order =
-      isAdmin
-        ? await this.ordersService.findById(id)
-        : await this.ordersService.findByIdAndUser(id, user.id);
+    const isAdmin =
+      user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    const order = isAdmin
+      ? await this.ordersService.findById(id)
+      : await this.ordersService.findByIdAndUser(id, user.id);
 
     if (!order) {
       throw new NotFoundException('سفارش یافت نشد');
@@ -160,7 +165,9 @@ export class OrdersController {
   })
   @ApiResponse({ status: 200, description: 'فیش بارگذاری شد', type: Order })
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: MAX_FILE_SIZE } }),
+  )
   async uploadReceipt(
     @CurrentUser() user: User,
     @Param('id') id: string,
@@ -172,7 +179,10 @@ export class OrdersController {
 
     validateImageFile(file);
 
-    const filename = await processAndSaveImage(file, 'receipts', this.storage, { width: 1920, height: 1920 });
+    const filename = await processAndSaveImage(file, 'receipts', this.storage, {
+      width: 1920,
+      height: 1920,
+    });
 
     const order =
       user.role === UserRole.ADMIN
@@ -198,6 +208,18 @@ export class OrdersController {
     return { message: 'سفارش با موفقیت حذف شد' };
   }
 
+  @Put(':id/assign-courier')
+  @ApiOperation({ summary: 'تخصیص کوریری به سفارش (فقط ادمین)' })
+  @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+  @Roles(UserRole.ADMIN)
+  @Permissions(PERMISSIONS.ORDERS_UPDATE)
+  async assignCourier(
+    @Param('id') id: string,
+    @Body() dto: AssignCourierDto,
+  ): Promise<Order> {
+    return this.ordersService.assignCourier(id, dto);
+  }
+
   @Put('courier/deliver')
   @ApiOperation({ summary: 'تغییر وضعیت به تحویل داده شده توسط کوریری' })
   @ApiBody({ type: CourierDeliverDto })
@@ -215,8 +237,12 @@ export class OrdersController {
   @Roles(UserRole.COURIER)
   async courierDeliver(
     @Body() courierDeliverDto: CourierDeliverDto,
+    @CurrentUser() user: User,
   ): Promise<Order> {
-    return this.ordersService.markAsDeliveredByCourier(courierDeliverDto);
+    return this.ordersService.markAsDeliveredByCourier(
+      courierDeliverDto,
+      user.id,
+    );
   }
 
   @Post('admin/expire-receipt-orders')
@@ -248,7 +274,8 @@ export class OrdersController {
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<ReceiptHistory[]> {
-    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
+    const isAdmin =
+      user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN;
     const order = isAdmin
       ? await this.ordersService.findById(id)
       : await this.ordersService.findByIdAndUser(id, user.id);

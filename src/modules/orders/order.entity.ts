@@ -52,6 +52,13 @@ export class Order {
   @Column({ type: 'char', length: 36 })
   userId: string;
 
+  @ApiPropertyOptional({
+    example: '550e8400-e29b-41d4-a716-446655440009',
+    description: 'شناسه کوریری تخصیص‌یافته',
+  })
+  @Column({ type: 'char', length: 36, nullable: true })
+  courierId: string | null;
+
   @ManyToOne(() => User, {
     nullable: true,
     createForeignKeyConstraints: false,

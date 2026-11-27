@@ -20,6 +20,9 @@ export class RefreshToken {
   @Column({ type: 'varchar', length: 255 })
   tokenHash: string;
 
+  @Column({ type: 'char', length: 16, nullable: true })
+  tokenPrefix: string | null;
+
   @Column({ type: 'timestamp' })
   expiresAt: Date;
 
@@ -35,6 +38,7 @@ export class RefreshToken {
   @BeforeInsert()
   async hashToken() {
     if (this.tokenHash) {
+      this.tokenPrefix = this.tokenHash.slice(0, 16);
       this.tokenHash = await bcrypt.hash(this.tokenHash, 10);
     }
   }

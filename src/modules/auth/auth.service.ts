@@ -39,11 +39,13 @@ export class AuthService {
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const existing = await this.usersService.findByEmail(registerDto.email);
     if (existing) {
-      throw new ConflictException('ایمیل قبلاً ثبت شده است');
+      throw new ConflictException('ثبت‌نام با این اطلاعات ممکن نیست');
     }
 
     if (registerDto.phone) {
-      const existingPhone = await this.usersService.findByPhone(registerDto.phone);
+      const existingPhone = await this.usersService.findByPhone(
+        registerDto.phone,
+      );
       if (existingPhone) {
         throw new ConflictException('شماره تماس قبلاً ثبت شده است');
       }
@@ -106,7 +108,9 @@ export class AuthService {
       phone: sendCodeDto.phone,
     });
     await verificationCode.setCode(code);
-    verificationCode.expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000);
+    verificationCode.expiresAt = new Date(
+      Date.now() + CODE_TTL_MINUTES * 60 * 1000,
+    );
     await this.verificationCodesRepository.save(verificationCode);
 
     await this.smsService.sendCode(sendCodeDto.phone, code);
@@ -129,6 +133,14 @@ export class AuthService {
     }
 
     if (!(await verificationCode.validateCode(verifyCodeDto.code))) {
+      verificationCode.attempts += 1;
+      if (verificationCode.attempts >= 5) {
+        await this.verificationCodesRepository.remove(verificationCode);
+        throw new UnauthorizedException(
+          'تعداد تلاش‌های ناموفق بیش از حد مجاز است. کد جدید درخواست کنید.',
+        );
+      }
+      await this.verificationCodesRepository.save(verificationCode);
       throw new UnauthorizedException('کد تایید اشتباه است');
     }
 
@@ -182,7 +194,9 @@ export class AuthService {
     const refreshTokenEntity = this.refreshTokensRepository.create({
       userId: user.id,
       tokenHash: refreshToken,
-      expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(
+        Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+      ),
     });
     await this.refreshTokensRepository.save(refreshTokenEntity);
 
@@ -204,8 +218,12 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string): Promise<AuthResponse> {
+    if (refreshToken.length < 16) {
+      throw new UnauthorizedException('refresh token نامعتبر است');
+    }
+
     const refreshTokenEntities = await this.refreshTokensRepository.find({
-      where: {},
+      where: { tokenPrefix: refreshToken.slice(0, 16) },
     });
 
     let validEntity: RefreshToken | null = null;
@@ -219,7 +237,9 @@ export class AuthService {
     }
 
     if (!validEntity) {
-      throw new UnauthorizedException('توکن تازه‌سازی نامعتبر یا منقضی شده است');
+      throw new UnauthorizedException(
+        'توکن تازه‌سازی نامعتبر یا منقضی شده است',
+      );
     }
 
     const user = await this.usersService.findById(validEntity.userId);

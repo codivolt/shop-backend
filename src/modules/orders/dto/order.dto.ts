@@ -23,6 +23,15 @@ export class CourierDeliverDto {
   orderCode: string;
 }
 
+export class AssignCourierDto {
+  @ApiProperty({
+    example: '550e8400-e29b-41d4-a716-446655440009',
+    description: 'شناسه کوریری',
+  })
+  @IsUUID()
+  courierId: string;
+}
+
 export class CreateOrderItemDto {
   @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440003',
